@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+      body {
+        margin: 0;
+        font-family: "Montserrat", sans-serif;
+      }
+
+      .card {
+        display: flex;
+        flex-direction: column;
+        width: 395px;
+        height: 210px;
+        border-radius: 10px;
+        background-color: #1a202c;
+        color: #cbd5e0;
+      }
+
+      .cardUpper {
+        display: flex;
+        height: 85%;
+        background-color: #f7fafc;
+        border-radius: 10px 10px 0 0;
+      }
+
+      .leftside {
+        width: 33.33%;
+        height: 40%;
+      }
+
+      .leftupper {
+        width: 100%;
+        height: 80px;
+        border-radius: 10px 0 0 0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+
+      .leftupper img {
+        border-radius: 50%;
+        width: 50px;
+        margin: 8px;
+      }
+
+      .leftlower {
+        width: 100%;
+        height: 80%;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        padding-top: 2px;
+      }
+
+      .leftlower h1,
+      .leftlower h4 {
+        text-align: center;
+        margin: 0;
+        color: #1a202c;
+      }
+
+      .leftlower h1 {
+        font-weight: bold;
+        font-size: 14px;
+        line-height: 16px;
+      }
+
+      .leftlower h4 {
+        font-weight: light;
+        font-size: 8px;
+        line-height: 16px;
+      }
+
+      .rightside {
+        width: 66.67%;
+        height: 100%;
+      }
+
+      .header {
+        height: 45%;
+        background-color: #f7fafc;
+        display: flex;
+        justify-content: start;
+        align-items: center;
+        padding-right: 20px;
+        border-radius: 0 10px 0 0;
+        padding-left: 12px;
+      }
+
+      .company {
+        display: flex;
+        justify-content: start;
+        padding-top: 1px;
+      }
+
+      .logo img {
+        width: 40px;
+        border-radius: 50%;
+        margin-right: 5px;
+      }
+
+      .businessDescription {
+        width: 24%;
+      }
+
+      .businessDescription h1 {
+        font-weight: bold;
+        font-size: 18px;
+        line-height: 6px;
+        color: #1a202c;
+        margin: 0;
+        padding-top: 7px;
+      }
+
+      .businessDescription h6 {
+        font-weight: light;
+        font-size: 8px;
+        line-height: 4px;
+        color: #4a5568;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+      }
+
+      .body {
+        height: 55%;
+        background-color: #f7fafc;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 4px;
+      }
+
+      .b_left {
+        height: 100%;
+        width: 80%;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: flex-start;
+      }
+
+      .contactInfo {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+
+      .phone,
+      .location,
+      .mail,
+      .website {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 3px;
+      }
+
+      .phone h1,
+      .location h1,
+      .mail h1,
+      .website h1 {
+        font-family: "Roboto Light", sans-serif;
+        font-weight: light;
+        font-size: 10px;
+        line-height: 18px;
+        color: #4a5568;
+        min-width: 175px;
+        max-width: 175px;
+        min-height: 18px;
+        border: none;
+        outline: none;
+        white-space: normal;
+        word-break: break-all;
+        display: flex;
+        align-items: center;
+        caret-color: transparent;
+        margin-left: 3px;
+      }
+
+      .cardLower {
+        height: 20%;
+      }
+
+      .footer {
+        height: 100%;
+        background-color: #48bb78;
+        border-radius: 0 0 10px 10px;
+      }
+
+      .logos {
+        display: flex;
+        justify-content: space-evenly;
+        /* justify-content: center; */
+        align-items: center;
+        padding-left: 2px;
+        padding-right: 2px;
+        padding-top: 6.5px;
+        min-height: 33px;
+      }
+
+      .logos div {
+        display: flex;
+        width: 20px;
+        color: #fff;
+      }
+
+      .icon {
+        color: #1a202c;
+         font-size: 9.5px;
+      }
+      .social-icons-div {
+        margin-left: 10px;
+        margin-right: 10px;
+        fill: #ffffff;
+      }
+      .social-icon {
+        display: block;
+      }
+      a{
+        text-decoration: none;
+        display: none;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="card">
+      <div class="cardUpper">
+        <div class="leftside">
+          <div class="leftupper">
+            <img
+              id="profilePicture"
+              src="https://upload.wikimedia.org/wikipedia/commons/7/7e/Circle-icons-profile.svg"
+              alt="img"
+              class="rounded-full size-[50px] m-8"
+            />
+          </div>
+          <div class="leftlower">
+            <h1 id="first_name">JOHN</h1>
+            <h1 id="last_name">DOE</h1>
+            <h4 id="job_title">DESIGNER</h4>
+          </div>
+        </div>
+        <div class="rightside">
+          <div class="header">
+            <div class="company">
+              <div class="logo">
+                <img
+                  id="logoPicture"
+                  src="https://shorturl.at/jNY48"
+                  alt=""
+                  class="size-[40px]"
+                />
+              </div>
+              <div class="businessDescription">
+                <h1 id="business_name">Business</h1>
+                <h6 id="business_description">Description</h6>
+              </div>
+            </div>
+          </div>
+          <div class="body">
+            <div class="b_left">
+              <div class="contactInfo">
+                <div class="phone">
+                  <i class="fa-solid fa-phone icon "></i>
+                  <h1 id="mobile">000-123-456-7890</h1>
+                </div>
+                <div class="location">
+                  <i class="fa-solid fa-location-dot icon"></i>
+                  <h1 id="location">Your Address</h1>
+                </div>
+                <div class="mail">
+                  <i class="fa-solid fa-envelope icon"></i>
+                  <h1 id="email">email@yourdomain.com</h1>
+                </div>
+                <div class="website">
+                  <i class="fa-solid fa-globe icon"></i>
+                  <h1 id="website">www.yourwebsite.com</h1>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="cardLower">
+        <div class="footer">
+          <div class="logos">
+            <a id="facebook" href="">
+              <div class="social-icons-div">
+                <i class="fa-brands fa-facebook social-icon" ></i>
+              </div>
+            </a>
+
+            <a id="youtube" href="">
+              <div class="social-icons-div">
+                <i class="fa-brands fa-youtube social-icon" ></i>
+              </div>
+            </a>
+
+            <a id="instagram" href="">
+              <div class="social-icons-div">
+                <i class="fa-brands fa-instagram social-icon" ></i>
+              </div>
+            </a>
+
+            <a id="github" href="">
+              <div class="social-icons-div">
+                <i class="fa-brands fa-github social-icon" ></i>
+              </div>
+            </a>
+
+            <a id="snapchat" href="">
+              <div class="social-icons-div">
+                <i class="fa-brands fa-snapchat social-icon" ></i>
+              </div>
+            </a>
+
+            <a id="twitter" href="">
+              <div class="social-icons-div">
+                <i class="fa-brands fa-twitter social-icon" ></i>
+              </div>
+            </a>
+
+            <a id="linkedin" href="">
+              <div class="social-icons-div">
+                <i class="fa-brands fa-linkedin social-icon" ></i>
+              </div>
+            </a>
+
+            <a id="spotify" href="">
+              <div class="social-icons-div">
+                <i class="fa-brands fa-spotify social-icon" ></i>
+              </div>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

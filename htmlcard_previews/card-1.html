@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+      body {
+        margin: 0;
+        font-family: "Montserrat", sans-serif;
+      }
+      
+      h1,h2,h3,h4,h5,h6 {
+        margin: 0;
+      }
+
+      .card {
+        display: flex;
+        flex-direction: column;
+        width: 395px;
+        max-height: 250px;
+        border-radius: 10px;
+        background-color: #1a202c;
+        color: #cbd5e0;
+      }
+
+      .cardUpper {
+        display: flex;
+        height: 85%;
+        background-color: #f7fafc;
+        border-radius: 10px 10px 0 0;
+        padding: 10px;
+      }
+
+      .leftside {
+        width: 33.33%;
+        height: 40%;
+      }
+
+      .leftupper {
+        width: 100%;
+        height: 80px;
+        border-radius: 10px 0 0 0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+
+      .leftupper img {
+        border-radius: 50%;
+        width: 50px;
+        margin: 8px;
+      }
+
+      .leftlower {
+        width: 100%;
+        /* height: 80%; */
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        padding-top: 2px;
+      }
+
+      .leftlower h1,
+      .leftlower h4 {
+        text-align: center;
+        margin: 0;
+        color: #1a202c;
+      }
+
+      .leftlower h1 {
+        font-weight: bold;
+        font-size: 14px;
+        line-height: 16px;
+      }
+
+      .leftlower h4 {
+        font-weight: light;
+        font-size: 8px;
+        line-height: 16px;
+      }
+
+      .rightside {
+        width: 66.67%;
+        height: 100%;
+      }
+
+      .header {
+        height: 45%;
+        background-color: #f7fafc;
+        display: flex;
+        justify-content: start;
+        align-items: center;
+        padding-right: 20px;
+        border-radius: 0 10px 0 0;
+        padding-left: 12px;
+        margin-bottom: 5px;
+      }
+
+      .company {
+        display: flex;
+        justify-content: start;
+        padding-top: 1px;
+      }
+
+      .logo img {
+        width: 40px;
+        border-radius: 50%;
+        margin-right: 5px;
+      }
+
+      .businessDescription h1 {
+        font-weight: bold;
+        font-size: 18px;
+        line-height: 25px;
+        color: #1a202c;
+        margin: 0;
+        padding-top: 1px;
+      }
+
+      .businessDescription h6 {
+        font-weight: lighter;
+        font-size: 9px;
+        line-height: 10px;
+        color: #4a5568;
+      }
+
+      .logo {
+        min-width: 35px;
+      }
+
+      .body {
+        height: 55%;
+        background-color: #f7fafc;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 4px;
+      }
+
+      .b_left {
+        height: 100%;
+        width: 80%;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: flex-start;
+      }
+
+      .contactInfo {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+
+      .phone,
+      .location,
+      .mail,
+      .website {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 3px;
+      }
+
+      .phone h1,
+      .location h1,
+      .mail h1,
+      .website h1 {
+        font-family: "Roboto Light", sans-serif;
+        font-weight: light;
+        font-size: 9.98px;
+        line-height: 10.5px;
+        color: #4a5568;
+        min-width: 175px;
+        max-width: 175px;
+        min-height: 18px;
+        border: none;
+        outline: none;
+        white-space: normal;
+        word-break: break-all;
+        display: flex;
+        align-items: center;
+        caret-color: transparent;
+        margin: 2px 3px;
+      }
+
+      .cardLower {
+        height: 20%;
+      }
+
+      .footer {
+        height: 100%;
+        background-color: #48bb78;
+        border-radius: 0 0 10px 10px;
+      }
+
+      .logos {
+        display: flex;
+        justify-content: space-evenly;
+        align-items: center;
+        padding-left: 2px;
+        padding-right: 2px;
+        min-height: 33px;
+      }
+
+      .logos div {
+        display: flex;
+        width: 20px;
+        color: #fff;
+      }
+
+      .icon {
+        color: #1a202c;
+        font-size: 9.5px;
+      }
+
+      .social-icons-div {
+        margin-left: 10px;
+        margin-right: 10px;
+        fill: #ffffff;
+      }
+
+      .social-icon {
+        display: block;
+      }
+
+      a {
+        text-decoration: none;
+        display: none;
+      }
+
+    </style>
+  </head>
+
+  <body>
+    <div class="card">
+      <div class="cardUpper">
+        <div class="leftside">
+          <div class="leftupper"><img id="profile_pic" src="{{profile_pic}}" alt="img" class="rounded-full size-[50px] m-8" /></div>
+          <div class="leftlower">
+            <h1 id="first_name">{{first_name}}</h1>
+            <h1 id="last_name">{{last_name}}</h1>
+            <h4 id="role">{{role}}</h4>
+          </div>
+        </div>
+        <div class="rightside">
+          <div class="header">
+            <div class="company">
+              <div class="logo"><img id="logo" src="{{logo}}" alt="" class="size-[40px]" /></div>
+              <div class="businessDescription">
+                <h1 id="business_name">{{business_name}}</h1>
+                <h6 id="business_description">{{business_description}}</h6>
+              </div>
+            </div>
+          </div>
+          <div class="body">
+            <div class="b_left">
+              <div class="contactInfo">
+                <div class="phone"><i class="fa-solid fa-phone icon "></i>
+                  <h1 id="mobile">{{mobile}}</h1>
+                </div>
+                <div class="location"><i class="fa-solid fa-location-dot icon"></i>
+                  <h1 id="location">{{location}}</h1>
+                </div>
+                <div class="mail"><i class="fa-solid fa-envelope icon"></i>
+                  <h1 id="email">{{email}}</h1>
+                </div>
+                <div class="website"><i class="fa-solid fa-globe icon"></i>
+                  <h1 id="website">{{website}}</h1>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="cardLower">
+        <div class="footer">
+          <div class="logos"><a id="facebook_link" href="{{facebook_link}}">
+              <div class="social-icons-div"><i class="fa-brands fa-facebook social-icon"></i></div>
+            </a><a id="youtube_link" href="{{youtube_link}}">
+              <div class="social-icons-div"><i class="fa-brands fa-youtube social-icon"></i></div>
+            </a><a id="instagram_link" href="{{instagram_link}}">
+              <div class="social-icons-div"><i class="fa-brands fa-instagram social-icon"></i></div>
+            </a><a id="github_link" href="{{github_link}}">
+              <div class="social-icons-div"><i class="fa-brands fa-github social-icon"></i></div>
+            </a><a id="snapchat_link" href="{{snapchat_link}}">
+              <div class="social-icons-div"><i class="fa-brands fa-snapchat social-icon"></i></div>
+            </a><a id="twitter_link" href="{{twitter_link}}">
+              <div class="social-icons-div"><i class="fa-brands fa-twitter social-icon"></i></div>
+            </a><a id="linkedin_link" href="{{linkedin_link}}">
+              <div class="social-icons-div"><i class="fa-brands fa-linkedin social-icon"></i></div>
+            </a><a id="spotify_link" href="{{spotify_link}}">
+              <div class="social-icons-div"><i class="fa-brands fa-spotify social-icon"></i></div>
+            </a></div>
+        </div>
+      </div>
+    </div>
+  </body>
+
+</html>
