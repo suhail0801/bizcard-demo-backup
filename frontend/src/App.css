@@ -1,0 +1,129 @@
+/* #root {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 2rem;
+  text-align: center;
+}
+
+.logo {
+  height: 6em;
+  padding: 1.5em;
+  will-change: filter;
+  transition: filter 300ms;
+}
+.logo:hover {
+  filter: drop-shadow(0 0 2em #646cffaa);
+}
+.logo.react:hover {
+  filter: drop-shadow(0 0 2em #61dafbaa);
+}
+
+@keyframes logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  a:nth-of-type(2) .logo {
+    animation: logo-spin infinite 20s linear;
+  }
+}
+
+.card {
+  padding: 2em;
+}
+
+.read-the-docs {
+  color: #888;
+} */
+
+/* 
+<label htmlFor="" className="text-left">First name</label>
+<input className='rounded border w-full h-10 p-1 outline-none mb-5' name='first_name' type="text" placeholder='Enter Name' onChange={handleInput}/>
+<label htmlFor="" className="text-left">Last name</label>
+<input className='rounded border w-full h-10 p-1 outline-none mb-5' name='last_name' type="text" placeholder='Enter Name' onChange={handleInput}/>
+<label htmlFor="" className="text-left">Gender pronouns</label>
+<input className='rounded border w-full h-10 p-1 outline-none mb-5' name='gender_pronouns' type="text" placeholder='Enter Name' onChange={handleInput}/>
+<label htmlFor="" className="text-left">Job title</label>
+<input className='rounded border w-full h-10 p-1 outline-none mb-5' name='job_title' type="text" placeholder='Enter Name' onChange={handleInput}/>
+<label htmlFor="" className="text-left">Business name</label>
+<input className='rounded border w-full h-10 p-1 outline-none mb-5' name='business_name' type="text" placeholder='Enter Name' onChange={handleInput}/>
+<label htmlFor="" className="text-left">Business address</label>
+<textarea className="rounded resize-none border w-full h-28 mb-5 outline-none" name="business_address" onChange={handleInput}></textarea>
+<label htmlFor="" className="text-left">Business description</label>
+<textarea className="rounded resize-none border w-full h-28 mb-5 outline-none" name="business_description" onChange={handleInput}></textarea>  */
+
+
+/* import {FaPhoneAlt} from "react-icons/fa"
+import {BiSolidMessageDetail} from "react-icons/bi"
+import {HiOutlineMail} from "react-icons/hi"
+import {TbWorldWww} from "react-icons/tb"
+import {FaLocationArrow} from "react-icons/fa"
+import {FaTelegramPlane} from "react-icons/fa"
+import {FaWhatsapp} from "react-icons/fa"
+import {BsFillCalendarDateFill} from "react-icons/bs" */
+
+/* import { FaFacebook } from "react-icons/fa";
+import { FaYoutube } from "react-icons/fa"; 
+import { FaInstagram } from "react-icons/fa";
+import { FaGithub } from "react-icons/fa";
+import { FaSnapchat } from "react-icons/fa";
+import { FaTwitter } from "react-icons/fa";
+import { FaLinkedin } from "react-icons/fa";
+import { FaSpotify } from "react-icons/fa"; */
+
+@import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;1,100;1,200;1,300;1,400;1,500;1,600&display=swap');
+
+* {
+  font-family: Poppins;
+}
+
+/* width */
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+/* Track */
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+/* Handle */
+::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 5px;
+}
+
+/* Handle on hover */
+::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+.embed-wrapper {
+  position: relative;
+  padding-bottom: 56.25%; /* 16:9 aspect ratio */
+  height: 0;
+  overflow: hidden;
+}
+
+.embed-wrapper iframe,
+.embed-wrapper object,
+.embed-wrapper embed {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+body {
+  background: #111827;
+}
+
+.active {
+  background: rgb(34 197 94 / 1);
+  color: #fff;
+}
