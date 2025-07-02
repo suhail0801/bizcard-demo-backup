@@ -32,6 +32,7 @@ import { useParams } from "react-router-dom";
 
 import axios from "axios";
 import Navbar from "./Project_Components/Navbar";
+import { parsePhoneNumberFromString } from 'libphonenumber-js';
 
 const fillCardVariables = async (cardPreview, cardVariables, dontFillImages) => {
   cardPreview = cardPreview.toString();
@@ -588,6 +589,15 @@ const UserSavedCard = () => {
     // You may also want to redirect the user to the login page or perform other logout-related actions
     console.log("Logout button clicked");
   };
+
+  function formatPhone(phone) {
+    if (!phone) return '';
+    const phoneNumber = parsePhoneNumberFromString(phone);
+    if (phoneNumber) {
+      return phoneNumber.formatInternational();
+    }
+    return phone;
+  }
 
   return (
     <div className=" bg-slate-900">

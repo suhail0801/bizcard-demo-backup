@@ -1,4 +1,5 @@
 import React from 'react';
+import { parsePhoneNumberFromString } from 'libphonenumber-js';
 
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
@@ -28,6 +29,15 @@ const imageStyle = {
     width: '80px',
     height: '80px',
   };
+
+function formatPhone(phone) {
+  if (!phone) return '';
+  const phoneNumber = parsePhoneNumberFromString(phone);
+  if (phoneNumber) {
+    return phoneNumber.formatInternational();
+  }
+  return phone;
+}
 
     const Card3 = ({ contactData, primaryActionData,secondaryActionData, selectedImage,selectedProfile,selectedLogo,secondaryActionBtns }) => {
       const { gender_pronouns, first_name, last_name, job_title, business_name,business_address} = contactData;
@@ -80,9 +90,9 @@ const imageStyle = {
 {primaryActionData.mobile && (
   <div className="flex items-center my-1 icon-container"onClick={() => handlePrimaryActionClick('mobile')}>
    <a href={`tel${primaryActionData.mobile}`}target='blank'  className="h-7 w-7 bg-green-500 flex justify-center items-center rounded-full ml-5">
-      <Phone className="h-4 w-9 text-white icon" />
+      <Phone className="text-white" />
     </a>
-    
+    <span className="ml-2 text-black font-montserrat text-xs">{formatPhone(primaryActionData.mobile)}</span>
   </div>
 )}
 

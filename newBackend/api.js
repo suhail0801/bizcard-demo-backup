@@ -5,6 +5,7 @@ const Sequelize = require("sequelize");
 const fs = require('fs');
 const path = require('path');
 const CryptoJS = require('crypto-js');
+const { customFilesAndImages, saveBase64Image } = require('./utils/uploadFilesToSys');
 
 const secretKey = 'onfra-devs-key-1001';
 
@@ -87,6 +88,24 @@ const User = db.define("user", {
     unique: true,
     allowNull: true
   },
+  jobTitle: {
+    type: Sequelize.STRING,
+    allowNull: true
+  },
+  businessName: {
+    type: Sequelize.STRING,
+    allowNull: true
+  },
+  profilePhoto: {
+    type: Sequelize.STRING,
+    allowNull: true
+  },
+  mobile: {
+    type: Sequelize.STRING,
+    allowNull: true
+  },
+}, {
+  tableName: 'users'
 });
 
 const SavedCard = db.define("savedCard", {
@@ -159,6 +178,22 @@ const SavedCard = db.define("savedCard", {
     type: Sequelize.JSON,
     defaultValue: []
   }
+});
+
+const Contact = db.define('contact', {
+  id: { type: Sequelize.INTEGER, primaryKey: true, autoIncrement: true },
+  userId: { type: Sequelize.INTEGER, allowNull: false }, // owner
+  contactUserId: { type: Sequelize.INTEGER, allowNull: true }, // if registered
+  contactName: { type: Sequelize.STRING },
+  contactEmail: { type: Sequelize.STRING },
+  contactPhone: { type: Sequelize.STRING },
+  contactCardId: { type: Sequelize.INTEGER }, // link to card
+  jobTitle: { type: Sequelize.STRING },
+  businessName: { type: Sequelize.STRING },
+  addedAt: { type: Sequelize.DATE, defaultValue: Sequelize.NOW },
+  sharedBack: { type: Sequelize.BOOLEAN, defaultValue: false },
+  notes: { type: Sequelize.STRING },
+  savedBy: { type: Sequelize.STRING }
 });
 
 // Define associations
@@ -422,155 +457,116 @@ const addUserCards = async(req,res) => {
     
 }
 
-function saveBase64Image(base64String) {
-  // Create a folder for the current date
-
-  const baseOutputDir = path.join(__dirname, 'uploads');
-  const date = new Date();
-  const dateFolder = `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}-${date.getDate().toString().padStart(2, '0')}`;
-  const outputPath = path.join(baseOutputDir, dateFolder);
-  console.log(outputPath)
-  // Ensure the directory exists
-  if (!fs.existsSync(outputPath)) {
-      fs.mkdirSync(outputPath, { recursive: true });
-  }
-
-  // Generate a unique filename
-  const filename = `image_${Date.now()}.png`;
-  const fullPath = path.join(outputPath, filename);
-
-  // Remove the header of the base64 string if it exists
-  if (base64String.startsWith('data:image')) {
-      base64String = base64String.split(',')[1];
-  } else {
-    return base64String
-  }
-
-  // Decode the base64 string
-  const buffer = Buffer.from(base64String, 'base64');
-
-  // Write the file
-  fs.writeFileSync(fullPath, buffer);
-
-  return "/images/"  + dateFolder + "/" + filename;
-}
-
 const addCard = async(req,res) => {
-  
   req.body.featuredContent.forEach((content, index) => {
-    console.log(content.type, index)
     if(content.type == "product") {
-      req.body.featuredContent[index].image = saveBase64Image(req.body.featuredContent[index].image)
+      req.body.featuredContent[index].image = saveBase64Image(content.image, req.user.id, 'card_images');
     }
   });
-  
-  console.log(req.body)
-    // return 0
-    let {
-      featuredContent,
-      firstName,
-      lastName,
-      jobTitle,
-      mobile,
-      email,
-      businessName,
-      profilePhoto,
-      logo,
-      coverPhoto,
-      primaryActions,
-      secondaryActions,
-      primaryBackgroundColor,
-      secondaryBackgroundColor,
-      textColor,
-      titleColor,
-      config,
-      status,
-      title
-    } = req.body
-    // await UserCards.create(cardDetails)
-    
-    logo = saveBase64Image(logo)
-    profilePhoto = saveBase64Image(profilePhoto)
-    coverPhoto = saveBase64Image(coverPhoto)
-
-    const saveCard = await SavedCard.create({
-      userId: req.user.id,
-      featuredContent,
-      firstName,
-      lastName,
-      jobTitle,
-      mobile,
-      email,
-      businessName,
-      profilePhoto,
-      logo,
-      coverPhoto,
-      primaryActions,
-      secondaryActions,
-      primaryBackgroundColor,
-      secondaryBackgroundColor,
-      textColor,
-      titleColor,
-      config,
-      title,
-      status
-    })
-
-    return res.json(saveCard)
+  let {
+    featuredContent,
+    firstName,
+    lastName,
+    jobTitle,
+    mobile,
+    email,
+    businessName,
+    profilePhoto,
+    logo,
+    coverPhoto,
+    primaryActions,
+    secondaryActions,
+    primaryBackgroundColor,
+    secondaryBackgroundColor,
+    textColor,
+    titleColor,
+    config,
+    status,
+    title
+  } = req.body
+  logo = saveBase64Image(logo, req.user.id, 'card_images');
+  profilePhoto = saveBase64Image(profilePhoto, req.user.id, 'profile_photos');
+  coverPhoto = saveBase64Image(coverPhoto, req.user.id, 'card_images');
+  const saveCard = await SavedCard.create({
+    userId: req.user.id,
+    featuredContent,
+    firstName,
+    lastName,
+    jobTitle,
+    mobile,
+    email,
+    businessName,
+    profilePhoto,
+    logo,
+    coverPhoto,
+    primaryActions,
+    secondaryActions,
+    primaryBackgroundColor,
+    secondaryBackgroundColor,
+    textColor,
+    titleColor,
+    config,
+    title,
+    status
+  })
+  return res.json(saveCard)
 }
 
 const updateCard = async(req,res) => {
-    console.log(req.body)
-    let {
-      featuredContent,
-      firstName,
-      lastName,
-      jobTitle,
-      mobile,
-      email,
-      businessName,
-      profilePhoto,
-      logo,
-      coverPhoto,
-      primaryActions,
-      secondaryActions,
-      primaryBackgroundColor,
-      secondaryBackgroundColor,
-      textColor,
-      titleColor,
-      status,
-      config,
-      title
-    } = req.body
-    // await UserCards.create(cardDetails)
-    
-    logo = saveBase64Image(logo)
-    profilePhoto = saveBase64Image(profilePhoto)
-    coverPhoto = saveBase64Image(coverPhoto)
-
-    const saveCard = await SavedCard.update({
-      featuredContent,
-      title,
-      firstName,
-      lastName,
-      jobTitle,
-      mobile,
-      email,
-      businessName,
-      profilePhoto,
-      logo,
-      coverPhoto,
-      primaryActions,
-      secondaryActions,
-      primaryBackgroundColor,
-      secondaryBackgroundColor,
-      textColor,
-      titleColor,
-      status,
-      config
-    }, { where: { id: req.body.id } })
-
-    return res.json(saveCard)
+  let {
+    featuredContent,
+    firstName,
+    lastName,
+    jobTitle,
+    mobile,
+    email,
+    businessName,
+    profilePhoto,
+    logo,
+    coverPhoto,
+    primaryActions,
+    secondaryActions,
+    primaryBackgroundColor,
+    secondaryBackgroundColor,
+    textColor,
+    titleColor,
+    status,
+    config,
+    title
+  } = req.body
+  if (Array.isArray(featuredContent)) {
+    featuredContent = featuredContent.map(item => {
+      if (item.type === 'product' && item.image) {
+        return { ...item, image: saveBase64Image(item.image, req.user.id, 'card_images') };
+      }
+      return item;
+    });
+  }
+  logo = saveBase64Image(logo, req.user.id, 'card_images');
+  profilePhoto = saveBase64Image(profilePhoto, req.user.id, 'profile_photos');
+  coverPhoto = saveBase64Image(coverPhoto, req.user.id, 'card_images');
+  const saveCard = await SavedCard.update({
+    featuredContent,
+    title,
+    firstName,
+    lastName,
+    jobTitle,
+    mobile,
+    email,
+    businessName,
+    profilePhoto,
+    logo,
+    coverPhoto,
+    primaryActions,
+    secondaryActions,
+    primaryBackgroundColor,
+    secondaryBackgroundColor,
+    textColor,
+    titleColor,
+    status,
+    config
+  }, { where: { id: req.body.id } })
+  return res.json(saveCard)
 }
 
 const getCard = async(req,res) => {
@@ -594,16 +590,21 @@ const getPublicCard = async(req,res) => {
   console.log(req.query, "REQUESTED OPEN CARD")  
   const id = parseInt(req.query.id)  
   console.log(id, "ID DECRYPTED HERE")
-    const cards = await SavedCard.findOne({
-      where: {
-        id,
-        config: {
-          expose: true
-        }
+  const card = await SavedCard.findOne({
+    where: {
+      id,
+      config: {
+        expose: true
       }
-    })
-
-    return res.json(cards)
+    },
+    include: [{ model: User, attributes: ['profilePhoto'] }]
+  });
+  if (!card) return res.status(404).json({ error: 'Card not found' });
+  // Attach the latest profilePhoto from the User as ownerProfilePhoto
+  const cardJson = card.toJSON();
+  cardJson.ownerProfilePhoto = cardJson.user && cardJson.user.profilePhoto ? cardJson.user.profilePhoto : null;
+  delete cardJson.user;
+  return res.json(cardJson);
 }
 
 const updateUserCards = async(req,res)=>{
@@ -664,6 +665,193 @@ const deleteSavedCard = async (req, res) => {
   res.json({ message: "Card deleted" });
 };
 
+// Add countryCodes list for phone formatting
+const countryCodes = [
+  '+1', '+91', '+44', '+61', '+81'
+];
+
+// Add a contact
+const addContact = async (req, res) => {
+  try {
+    let { contactUserId, contactName, contactEmail, contactPhone, contactCardId, sharedBack, notes, jobTitle: jobTitleRaw, businessName: businessNameRaw, savedBy: savedByFromBody, userId: userIdFromBody } = req.body;
+    // Always use userIdFromBody if provided (for share my contact)
+    let userId = userIdFromBody || req.user.id;
+    if (contactUserId && userId && String(userId) === String(contactUserId)) {
+      return res.status(400).json({ error: "You cannot add yourself as a contact." });
+    }
+    let savedBy = "by me";
+    const business = req.body.business || businessNameRaw;
+    const jobTitle = req.body['job title'] || jobTitleRaw;
+    // Upsert logic: try to find existing contact
+    let where = { userId };
+    if (contactUserId) {
+      where.contactUserId = contactUserId;
+    } else if (contactEmail) {
+      where.contactEmail = contactEmail;
+    }
+    let contact = await Contact.findOne({ where });
+    if (contact) {
+      // Update existing contact
+      await contact.update({
+        contactName,
+        contactEmail,
+        contactPhone,
+        contactCardId,
+        jobTitle: jobTitle,
+        businessName: business,
+        sharedBack: !!sharedBack,
+        notes,
+        savedBy
+      });
+    } else {
+      // Create new contact
+      contact = await Contact.create({
+        userId,
+        contactUserId: contactUserId || null,
+        contactName,
+        contactEmail,
+        contactPhone,
+        contactCardId,
+        jobTitle: jobTitle,
+        businessName: business,
+        sharedBack: !!sharedBack,
+        notes,
+        savedBy
+      });
+    }
+    res.json(contact);
+  } catch (err) {
+    res.status(500).json({ error: "Failed to add contact" });
+  }
+};
+
+// Get all contacts for the logged-in user
+const getContacts = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    let contacts = await Contact.findAll({ where: { userId }, order: [['addedAt', 'DESC']] });
+    // Only keep the latest contact for each unique contactUserId (or contactEmail if contactUserId is null)
+    const uniqueContacts = {};
+    for (const c of contacts) {
+      const key = c.contactUserId ? `id_${c.contactUserId}` : `email_${c.contactEmail}`;
+      if (!uniqueContacts[key]) {
+        uniqueContacts[key] = c;
+      }
+    }
+    const contactsMapped = Object.values(uniqueContacts).map(c => {
+      const obj = c.toJSON ? c.toJSON() : c;
+      obj.business = obj.business || obj.businessName || '';
+      obj['job title'] = obj['job title'] || obj.jobTitle || '';
+      obj.savedBy = obj.savedBy || "by me";
+      obj.addedAt = obj.addedAt || c.addedAt;
+      return obj;
+    });
+    res.json(contactsMapped);
+  } catch (err) {
+    res.status(500).json({ error: "Failed to fetch contacts" });
+  }
+};
+
+// Delete a contact (optional)
+const deleteContact = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { id } = req.params;
+    const deleted = await Contact.destroy({ where: { id, userId } });
+    if (deleted) {
+      res.json({ message: "Contact deleted" });
+    } else {
+      res.status(404).json({ error: "Contact not found" });
+    }
+  } catch (err) {
+    res.status(500).json({ error: "Failed to delete contact" });
+  }
+};
+
+// Get user profile by ID (or current user if using auth)
+const getUserProfile = async (req, res) => {
+  try {
+    const userId = req.user ? req.user.id : req.params.id;
+    const user = await User.findOne({ where: { id: userId } });
+    if (!user) return res.status(404).json({ error: 'User not found' });
+    const userObj = user.toJSON ? user.toJSON() : user;
+    userObj.business = userObj.business || userObj.businessName || '';
+    userObj['job title'] = userObj['job title'] || userObj.jobTitle || '';
+    res.json(userObj);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch user profile' });
+  }
+};
+
+// Update user profile (current user)
+const updateUserProfile = (req, res) => {
+  customFilesAndImages(req, res, async function (err) {
+    if (err) {
+      return res.status(400).json({ error: 'File upload error', details: err.message });
+    }
+    try {
+      const userId = req.user.id;
+      let profilePhotoPath = undefined;
+      if (req.files && req.files.length > 0) {
+        // Only use the first image file
+        const file = req.files.find(f => f.mimetype.startsWith('image/'));
+        if (file) {
+          // Always use the correct relative path for profile photos
+          // file.path will be something like D:/onfra/bizcard/frontend/public/uploads/profile_photos/{userId}_{username}/profile_{userId}_{timestamp}.ext
+          // We want: /uploads/profile_photos/{userId}_{username}/profile_{userId}_{timestamp}.ext
+          const match = file.path.replace(/\\/g, '/').match(/\/uploads\/profile_photos\/.*$/);
+          if (match) {
+            profilePhotoPath = match[0];
+          } else {
+            // fallback: just use the filename in uploads/profile_photos
+            profilePhotoPath = '/uploads/profile_photos/' + file.filename;
+          }
+        }
+      }
+      // If body is multipart, fields are in req.body
+      const { username, email, jobTitle: jobTitleRaw, businessName: businessNameRaw, business, mobile } = req.body;
+      const jobTitle = req.body['job title'] || jobTitleRaw;
+      const businessFinal = business || businessNameRaw;
+      const updateData = { username, email, jobTitle, business: businessFinal, mobile };
+      if (profilePhotoPath) updateData.profilePhoto = profilePhotoPath;
+      const [updated] = await User.update(updateData, { where: { id: userId } });
+      if (!updated) return res.status(404).json({ error: 'User not found' });
+      const user = await User.findOne({ where: { id: userId } });
+      res.json(user);
+    } catch (err) {
+      res.status(500).json({ error: 'Failed to update user profile' });
+    }
+  });
+};
+
+// Get all contacts related to a user (for public biz card page)
+const getAllRelatedContacts = async (req, res) => {
+  try {
+    const { userId } = req.query;
+    if (!userId) return res.status(400).json({ error: 'userId required' });
+    // Find contacts where user is owner or recipient
+    const contacts = await Contact.findAll({
+      where: {
+        [db.Sequelize.Op.or]: [
+          { userId: userId },
+          { contactUserId: userId }
+        ]
+      }
+    });
+    const contactsMapped = contacts.map(c => {
+      const obj = c.toJSON ? c.toJSON() : c;
+      obj.business = obj.business || obj.businessName || '';
+      obj['job title'] = obj['job title'] || obj.jobTitle || '';
+      obj.savedBy = obj.savedBy || "by me";
+      obj.addedAt = obj.addedAt || c.addedAt;
+      return obj;
+    });
+    res.json(contactsMapped);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch related contacts' });
+  }
+};
+
 module.exports = {
     getUsers,
     registerUser,
@@ -678,9 +866,15 @@ module.exports = {
     getUserCardById,
     updateCard,
     addCard,
-    getCard,  
+    getCard,
     getAllCards,
     getPublicCard,
     findUserById,
     deleteSavedCard,
+    addContact,
+    getContacts,
+    deleteContact,
+    getUserProfile,
+    updateUserProfile,
+    getAllRelatedContacts,
 }

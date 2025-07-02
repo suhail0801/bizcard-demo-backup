@@ -1,6 +1,7 @@
 // Header.jsx
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from "react-router-dom";
+import defaultAvatar from '../assets/default-avatar.jpg';
 
 const Header = () => {
 
@@ -29,16 +30,11 @@ const Header = () => {
     }, [location]);
 
     async function validateToken() {
-
         const url = `/api/validate`;
-
         const storedToken = localStorage.getItem('jwtToken');
-
-        //     // Include the token in the headers for the request
         const headers = {
             Authorization: `Bearer ${storedToken}`
         };
-
         const response = await fetch(url, {
             method: 'GET',
             headers: {
@@ -46,20 +42,17 @@ const Header = () => {
                 ...headers
             }
         });
-
-        // console.log(response.status == 200)
-        // return 
-
+        if (!response.ok) {
+            setIsLoggedIn(false);
+            return;
+        }
         const res = await response.json();
-        console.log(response.status, "response.status")
-        // return
         if (response.status != 200) {
             setIsLoggedIn(false)
         } else {
             setIsLoggedIn(true)
             setProfile(res)
         }
-        console.log(res);
     }
 
     console.log(window.location.pathname, "window.location.href")
@@ -98,11 +91,20 @@ const Header = () => {
                             About
                         </Link>
                     </div>
-                    <div>
+                    <div className="flex items-center gap-4">
                         {isLoggedIn && (
-                            <span className="mr-4 text-gray-700 font-semibold">
+                            <span className="mr-2 text-gray-700 font-semibold">
                                 Welcome, {profile.username || profile.fullName || profile.email}!
                             </span>
+                        )}
+                        {isLoggedIn && (
+                            <img
+                                src={profile.profilePhoto && profile.profilePhoto.startsWith('/uploads/profile_photos') ? profile.profilePhoto : (profile.profilePhoto || defaultAvatar)}
+                                alt="Profile"
+                                className="w-10 h-10 rounded-full object-cover border-2 border-gray-400 cursor-pointer hover:border-blue-500 transition"
+                                onClick={() => navigate('/profile')}
+                                title="My Profile"
+                            />
                         )}
                         {
                             isLoggedIn ?

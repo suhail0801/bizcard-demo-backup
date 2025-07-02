@@ -1,10 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { FaLinkedin, FaInstagram, FaTwitter, FaFacebook, FaGithub, FaWhatsapp, FaTrash, FaPhone, FaSms, FaGlobe, FaSignal, FaTelegram, FaSkype, FaViber, FaWeixin, FaImage } from 'react-icons/fa';
+import { FaLinkedin, FaInstagram, FaTwitter, FaFacebook, FaGithub, FaWhatsapp, FaTrash, FaPhone, FaSms, FaGlobe, FaSignal, FaTelegram, FaSkype, FaViber, FaWeixin, FaImage, FaSignOutAlt } from 'react-icons/fa';
 import { RiHomeLine, RiMessengerLine } from 'react-icons/ri'; // Additional icons from other packages
 import { SiXmpp } from 'react-icons/si'; // XMPP icon
 import { FaArtstation, FaPaypal, FaPatreon, FaDribbble, FaTiktok, FaPinterest, FaSnapchat, FaSoundcloud, FaSpotify, FaTumblr, FaTwitch, FaVimeo, FaYoutube } from 'react-icons/fa';
 import { SiBuymeacoffee, SiDiaspora, SiCodeberg, SiQuora, SiOpencollective, SiPeertube, SiVk, SiYelp, SiMedium, SiReddit, SiThreads } from 'react-icons/si';
 import { useParams, useNavigate, useLocation } from "react-router-dom";
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+import defaultAvatar from '../assets/default-avatar.jpg';
+import BizCardAuthModal from './BizCardAuthModal';
+import ProfileAvatar from '../react_components/ProfileAvatar';
+import ProfileEditModal from '../react_components/ProfileEditModal';
+import { parsePhoneNumberFromString } from 'libphonenumber-js';
 
 function App() {
 
@@ -23,33 +30,28 @@ function App() {
     const queryParams = new URLSearchParams(location.search);
     const encryptedQuery = queryParams.get('query');
 
+    const [showLoginModal, setShowLoginModal] = useState(false);
+    const [isAuthenticated, setIsAuthenticated] = useState(false);
+    const [userProfile, setUserProfile] = useState(null);
+    const [contacts, setContacts] = useState([]);
+    const [jwtToken, setJwtToken] = useState(null); // Only set after modal login/signup
+    const [showProfileEdit, setShowProfileEdit] = useState(false);
+
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+
     useEffect(() => {
-        console.log("ID HEREEEEEEEEEEEEEEEE", encryptedQuery)
-        getCard()
-        // validateToken()
+        setLoading(true);
+        setError(null);
+        getCard();
+        // DO NOT check for any existing JWT or user session here
+        setIsAuthenticated(false);
+        setUserProfile(null);
+        setContacts([]);
+        setJwtToken(null);
     }, []);
 
-    const [formData, setFormData] = useState({
-        id: null,
-        firstName: 'Jhon',
-        lastName: 'Doe',
-        title: 'Digital Business Card',
-        mobile: '',
-        email: '',
-        jobTitle: 'Designer',
-        businessName: 'Onfra proptech soltuions',
-        profilePhoto: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQUv4efwDYARf5XR46l60ibliIEuSnj6oRFZA&s',
-        logo: 'https://onfra.io/wp-content/uploads/2024/05/onfra-logo.png',
-        coverPhoto: 'https://i.pinimg.com/originals/93/c5/9f/93c59fb55f3fdc378385274a6fcef7d5.gif',
-        primaryActions: [],
-        secondaryActions: [],
-        primaryBackgroundColor: "",
-        secondaryBackgroundColor: "",
-        textColor: "",
-        titleColor: "",
-        expose: false
-    });
-
+    const [formData, setFormData] = useState(null); // No defaults, only set after fetch
     const [featuredContent, setFeaturedContent] = useState([]);
     const [config, setConfig] = useState({
         expose: false,
@@ -68,18 +70,87 @@ function App() {
 
     // });
 
-    async function addToContact() {
-          // create a vcard file
-          var vcard = "BEGIN:VCARD\nVERSION:4.0\nFN:" + `${formData.firstName + "  " + formData.lastName}` + "\nTEL;TYPE=work,voice:" + formData.mobile + "\nEMAIL:" + formData.email + "\nEND:VCARD";
-          var blob = new Blob([vcard], { type: "text/vcard" });
-          var url = URL.createObjectURL(blob);
-          
-          const newLink = document.createElement('a');
-          newLink.download = formData.firstName + "  " + formData.lastName + ".vcf";
-          newLink.textContent = formData.firstName + "  " + formData.lastName;
-          newLink.href = url;
-          
-          newLink.click();
+    async function handleAddToContact() {
+        if (!isAuthenticated || !jwtToken) {
+            setShowLoginModal(true);
+            return;
+        }
+        try {
+            const response = await fetch('/api/contacts', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${jwtToken}`
+                },
+                body: JSON.stringify({
+                    contactUserId: formData.userId || formData.id,
+                    contactName: `${formData.firstName} ${formData.lastName}`,
+                    contactEmail: formData.email,
+                    contactPhone: formData.mobile,
+                    contactCardId: formData.id,
+                    jobTitle: formData.jobTitle || formData['job title'] || '',
+                    businessName: formData.businessName || formData.business || '',
+                    sharedBack: false,
+                    notes: ''
+                })
+            });
+            if (response.ok) {
+                toast.success('Contact added successfully!', { position: 'top-center' });
+                loadContacts(jwtToken);
+            } else {
+                const data = await response.json();
+                if (data && data.error === 'You cannot add yourself as a contact.') {
+                    toast.error('You cannot add yourself as a contact.', { position: 'top-center' });
+                } else {
+                    toast.error('Failed to add contact', { position: 'top-center' });
+                }
+            }
+        } catch (err) {
+            toast.error('Error adding contact', { position: 'top-center' });
+        }
+    }
+
+    async function handleShareMyContact() {
+        if (!isAuthenticated || !jwtToken || !userProfile || !formData) {
+            setShowLoginModal(true);
+            return;
+        }
+        console.log('DEBUG: formData (card owner):', formData);
+        console.log('DEBUG: userProfile (visitor):', userProfile);
+        const cardOwnerId = formData.userId || formData.id;
+        const visitorId = userProfile.id;
+        console.log('handleShareMyContact: cardOwnerId:', cardOwnerId, 'visitorId:', visitorId);
+        if (String(cardOwnerId) === String(visitorId)) {
+            toast.error('You cannot share your contact with yourself.', { position: 'top-center' });
+            return;
+        }
+        try {
+            const response = await fetch('/api/contacts', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${jwtToken}`
+                },
+                body: JSON.stringify({
+                    userId: cardOwnerId, // card owner
+                    contactUserId: visitorId, // visitor
+                    contactName: userProfile.username,
+                    contactEmail: userProfile.email,
+                    contactPhone: userProfile.mobile,
+                    jobTitle: userProfile.jobTitle,
+                    businessName: userProfile.businessName,
+                    savedBy: `by ${userProfile.username}`,
+                    notes: ''
+                })
+            });
+            if (response.ok) {
+                toast.success('Contact shared successfully!', { position: 'top-center' });
+            } else {
+                toast.error('Failed to share contact', { position: 'top-center' });
+            }
+        } catch (err) {
+            toast.error('Error sharing contact', { position: 'top-center' });
+        }
     }   
 
     const handleFeaturedContentChange = (index, key, value) => {
@@ -90,127 +161,187 @@ function App() {
     };
 
     async function getCard() {
-
         const url = `/api/publiccard?id=${(encryptedQuery)}`;
-
+        try {
         const response = await fetch(url, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
             }
         });
-
         if (!response.ok) {
-            console.log("error")
+                throw new Error('Failed to load card data');
         }
-
         const res = await response.json();
-        // if (!res.auth) {
-        //     location.href = " login"
-        // }
-        console.log(res);
-        setFormData(res)
+            console.log('Fetched card data:', res); // Debug log
+            setFormData(res);
         setConfig(res.config ? res.config : config)
-        setFeaturedContent(res.featuredContent ? res.featuredContent : featuredContent)
+        setFeaturedContent(res.featuredContent ? res.featuredContent : [])
+            setLoading(false);
+        } catch (err) {
+            setError(err.message || 'Unknown error');
+            setLoading(false);
+            toast.error('Failed to load business card. Please check the link or try again later.', { position: 'top-center' });
+        }
     }
 
+    // Called after modal login/signup is successful
+    async function handleLoginSuccess(token, profile) {
+        setJwtToken(token);
+        // Do not store in localStorage
+        // Prevent card owner from logging in
+        if (profile.email === formData.email) {
+            toast.error('You cannot perform this action as the card owner.', { position: 'top-center' });
+            setShowLoginModal(false);
+            setIsAuthenticated(false);
+            setUserProfile(null);
+            setContacts([]);
+            setJwtToken(null);
+            return;
+        }
+        setUserProfile(profile);
+        setIsAuthenticated(true);
+        setShowLoginModal(false);
+        loadContacts(token);
+    }
 
+    async function loadContacts(token) {
+        try {
+            const res = await fetch('/api/contacts', {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            if (res.ok) {
+                const data = await res.json();
+                setContacts(data);
+            }
+        } catch {}
+    }
 
+    // Only allow add/share after login
+    function handleAuthAction() {
+        setShowLoginModal(true);
+    }
+
+    // Add logout handler
+    function handleLogout() {
+        setIsAuthenticated(false);
+        setUserProfile(null);
+        setContacts([]);
+        setJwtToken(null);
+    }
+
+    // Add edit profile button logic
+    const isCardOwner = isAuthenticated && userProfile && formData && userProfile.email === formData.email;
+
+    if (loading) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-gray-900">
+                <div className="text-white text-xl animate-pulse">Loading business card...</div>
+            </div>
+        );
+    }
+    if (error || !formData) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-gray-900">
+                {/* Toast will already show error */}
+            </div>
+        );
+    }
+
+    console.log('Rendering card with formData:', formData); // Debug log
 
     return (
-        <div className="min-h-screen p-8 text-white flex justify-center" style={{ backgroundColor: formData.primaryBackgroundColor }}>
-            <div className=" p-4 rounded-lg relative">
-                <div className={`p-4 rounded-lg w-96 shadow-xl`}>
-                    {formData.logo.includes("/images") ?
-                        <img src={"/api" + formData.logo} alt="Cover" className="p-4 absolute w-24 object-cover mb-4 rounded-lg" /> :
-                        <img src={formData.logo} alt="Cover" className="p-4 absolute w-24 object-cover mb-4 rounded-lg" />
-                    }
-                    {formData.profilePhoto.includes("/images") ?
-                        <img src={"/api" + formData.profilePhoto} alt="Cover" className="w-28 shadow-2xl mt-2 z-50  absolute  right-1/2 translate-x-1/2 top-[130px]  mx-auto rounded-full mb-4" /> :
-                        <img src={formData.profilePhoto} alt="Cover" className="w-28 shadow-2xl mt-2 z-50  absolute  right-1/2 translate-x-1/2 top-[130px]  mx-auto rounded-full mb-4" />
-                    }
-                    {/* {formData.logo && <img src={formData.logo} alt="Cover" className="p-4 absolute w-24 object-cover mb-4 rounded-lg" />}
-                    {formData.profilePhoto && <img src={formData.profilePhoto} alt="Profile" className="w-28 shadow-2xl mt-2 z-50  absolute  right-1/2 translate-x-1/2 top-[160px]  mx-auto rounded-full mb-4" />} */}
-                    <div className="text-center">
-                        {formData.coverPhoto.includes("/images") ?
-                            <img src={"/api" + formData.coverPhoto} alt="Cover" className="w-full h-40 object-cover mb-4 rounded-lg" /> :
-                            <img src={formData.coverPhoto} alt="Cover" className="w-full h-40 object-cover mb-4 rounded-lg" />
-                        }
-                        <div style={{ backgroundColor: formData.secondaryBackgroundColor }} className="p-4 rounded-lg mb-4 shadow-xl">
-
-                            <h3 style={{ color: formData.titleColor }} className="text-2xl font-bold mt-10">
-                                {formData.firstName} {formData.lastName}
-                            </h3>
-                            {/* <p style={{ color: formData.textColor }} className="text-gray-400">({formData.pronouns})</p> */}
-                            <p style={{ color: formData.textColor }} className="text-lg">{formData.jobTitle}</p>
-                            <p style={{ color: formData.textColor }} className="text-gray-400">{formData.businessName}</p>
-                            <button style={{ background: formData.primaryBackgroundColor }} className="p-2 rounded-lg mt-2" onClick={addToContact}>
-                                Add To Contact
+        <div className="min-h-screen p-8 text-white" style={{ backgroundColor: '#0f172a' }}>
+            <ToastContainer />
+            {/* Profile Bar */}
+            {isAuthenticated && userProfile && (
+                <div className="flex justify-end items-center mb-4">
+                    <div className="flex items-center gap-2 bg-gray-800 px-4 py-2 rounded-lg shadow">
+                        <img
+                            src={userProfile.profilePhoto && userProfile.profilePhoto.startsWith('/uploads/profile_photos') ? '/api' + userProfile.profilePhoto : (userProfile.profilePhoto || defaultAvatar)}
+                            alt="Profile"
+                            className="w-8 h-8 rounded-full object-cover border-2 border-white cursor-pointer"
+                            onClick={() => setShowProfileEdit(true)}
+                            title="Edit Profile"
+                        />
+                        <span className="text-white font-semibold text-sm">{userProfile.username || userProfile.email}</span>
+                        <button onClick={handleLogout} className="ml-2 text-red-400 hover:text-red-600" title="Logout">
+                            <FaSignOutAlt size={18} />
                             </button>
                         </div>
-                        {formData.primaryActions.length ? (
-                            <div style={{ backgroundColor: formData.secondaryBackgroundColor }} className='rounded-lg p-4 my-4 shadow-xl'>
-                                <h2 style={{ color: formData.titleColor }} className="text-lg font-bold mb-4 text-center"> Primary Platforms</h2>
-                                <div className="flex justify-center ">
-                                    <div className="grid grid-cols-5 gap-4">
-                                        {formData.primaryActions.map(({ platform, url, color }) => (
-                                            <a key={platform} href={generateURL(platform, url)} target="_blank" rel="noopener noreferrer" className="flex justify-center items-center text-white p-4 rounded-full" style={{ background: color }}>
-                                                <IconHandler platform={platform} />
-                                            </a>
-                                        ))}
                                     </div>
+            )}
+            {/* Business Card Header */}
+            <h1 className="text-2xl md:text-3xl font-extrabold text-white text-center mb-6 tracking-wide">Business Card</h1>
+            <BizCardAuthModal isOpen={showLoginModal} onClose={() => setShowLoginModal(false)} onSuccess={handleLoginSuccess} />
+            <div className="max-w-7xl mx-auto flex flex-col lg:flex-row gap-8">
+                {/* Business Card Container */}
+                <div className="flex-1 flex flex-col items-center">
+                    {formData && (
+                        <BusinessCardPreview card={formData} />
+                    )}
+                    {/* Buttons below the card */}
+                    <div className="flex flex-col md:flex-row gap-4 w-full max-w-md mx-auto mt-2">
+                        <button
+                            className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-lg shadow-md transition-all"
+                            onClick={handleAddToContact}
+                        >
+                            Add To Contact
+                        </button>
+                        <button
+                            className="flex-1 bg-green-600 hover:bg-green-700 text-white font-semibold py-3 rounded-lg shadow-md transition-all"
+                            onClick={handleShareMyContact}
+                        >
+                            Share My Contact
+                        </button>
                                 </div>
                             </div>
-                        ) : ""}
-                        {formData.secondaryActions.length ? (
-                            <div style={{ backgroundColor: formData.secondaryBackgroundColor }} className='rounded-lg p-4 my-4 shadow-xl'>
-                                <h2 style={{ color: formData.titleColor }} className="text-lg font-bold mb-4 text-center"> Also Active in </h2>
-
-                                <div className="flex justify-center items-center">
-                                    <div className="grid grid-cols-5 gap-4">
-                                        {formData.secondaryActions.map(({ platform, url, color }) => (
-                                            <a key={platform} href={url} target="_blank" rel="noopener noreferrer" className="flex justify-center items-center text-white p-4 rounded-full" style={{ background: color }}>
-                                                <IconHandler platform={platform} />
-                                            </a>
-                                        ))}
-                                    </div>
+                {/* Contacts Section - Only show after login and not card owner */}
+                {isAuthenticated && userProfile && userProfile.email !== formData.email && (
+                    <div className="flex-1">
+                        <div className="bg-white rounded-lg shadow-xl p-6 w-full text-gray-900">
+                            <h2 className="text-2xl font-bold mb-6 text-center">Your Contacts</h2>
+                            {contacts.length === 0 ? (
+                                <div className="text-gray-500 text-center p-8 bg-gray-100 rounded-lg">
+                                    No contacts found.
                                 </div>
-                            </div>
-                        ) : ""}
-                        <div className="mt-8">
-                            {featuredContent.map((item, index) => (
-                                <div key={index} className="mb-4">
-                                    {item.type === 'media' && item.content && <video src={item.content} controls autoPlay loop className="w-full p-4 rounded-lg shadow-xl" style={{ backgroundColor: formData.secondaryBackgroundColor }} />}
-                                    {item.type === 'product' && (
-                                        <div style={{ backgroundColor: formData.secondaryBackgroundColor }} className="text-center p-4 rounded-lg">
-                                            {item.image && <img src={item.image} alt="Product" className="w-full rounded-lg mb-2" />}
-                                            <h3 style={{ color: formData.titleColor }} className="text-xl font-bold">{item.title}</h3>
-                                            <p style={{ color: formData.textColor }} className="text-gray-400">{item.description}</p>
-                                            <p style={{ color: formData.textColor }} className="text-lg">{item.price}</p>
-                                            {item.buttonText && (
-                                                <button style={{ background: formData.primaryBackgroundColor }} className="p-2 rounded-lg mt-2">
-                                                    <a href={item.link} target='__blank' > {item.buttonText} </a>
-                                                </button>
-
-                                            )}
-                                        </div>
-                                    )}
-                                    {item.type === 'text' && <p style={{ backgroundColor: formData.secondaryBackgroundColor, color: formData.textColor }} className="text-white w-full p-4 rounded-lg shadow-xl ">{item.content}</p>}
-                                    {item.type === 'embed' && item.content && (
-                                        <div
-                                            className="embed-wrapper w-full bg-gray-700  rounded-lg shadow-xl"
-                                            dangerouslySetInnerHTML={{ __html: item.content }}
-                                        />
-                                    )}
+                            ) : (
+                                <div className="overflow-x-auto">
+                                    <table className="w-full text-left border-collapse">
+                                        <thead>
+                                            <tr className="border-b border-gray-300">
+                                                <th className="py-3 px-4 font-semibold text-gray-700">Name</th>
+                                                <th className="py-3 px-4 font-semibold text-gray-700">Business</th>
+                                                <th className="py-3 px-4 font-semibold text-gray-700">Job Title</th>
+                                                <th className="py-3 px-4 font-semibold text-gray-700">Email</th>
+                                                <th className="py-3 px-4 font-semibold text-gray-700">Phone</th>
+                                                <th className="py-3 px-4 font-semibold text-gray-700">Saved By</th>
+                                                <th className="py-3 px-4 font-semibold text-gray-700">Added At</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {contacts.map(contact => (
+                                                <tr key={contact.id} className="border-b border-gray-200 hover:bg-gray-100 transition-colors">
+                                                    <td className="py-3 px-4 font-medium">{contact.contactName}</td>
+                                                    <td className="py-3 px-4">{contact.business || contact.businessName}</td>
+                                                    <td className="py-3 px-4">{contact['job title'] || contact.jobTitle}</td>
+                                                    <td className="py-3 px-4">{contact.contactEmail}</td>
+                                                    <td className="py-3 px-4">{formatPhone(contact.contactPhone)}</td>
+                                                    <td className="py-3 px-4">{contact.savedBy}</td>
+                                                    <td className="py-3 px-4">{contact.addedAt ? new Date(contact.addedAt).toLocaleString() : ''}</td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
                                 </div>
-                            ))}
+                            )}
                         </div>
-
-
-
                     </div>
-                </div>
+                )}
             </div>
+            {showProfileEdit && (
+                <ProfileEditModal isOpen={showProfileEdit} onClose={() => setShowProfileEdit(false)} userProfile={userProfile} onUpdate={setUserProfile} jwtToken={jwtToken} />
+            )}
         </div>
     );
 }
@@ -262,6 +393,14 @@ const additionalActions = [
     { platform: 'YouTube', prefix: 'https://www.youtube.com/c/', placeholder: 'username', color: '#FF0000' }
 ];
 
+function formatPhone(phone) {
+    if (!phone) return '';
+    const phoneNumber = parsePhoneNumberFromString(phone);
+    if (phoneNumber) {
+        return phoneNumber.formatInternational();
+    }
+    return phone;
+}
 
 const IconHandler = ({ platform }) => {
     switch (platform) {
@@ -356,5 +495,37 @@ const IconHandler = ({ platform }) => {
     }
 };
 
+function BusinessCardPreview({ card }) {
+    return (
+        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md mx-auto p-0 overflow-hidden relative my-4">
+            <div className="w-full h-32 md:h-40 bg-gray-200 relative">
+                {card.coverPhoto && (
+                    <img
+                        src={card.coverPhoto}
+                        alt="Cover"
+                        className="w-full h-full object-cover"
+                    />
+                )}
+                {card.profilePhoto && (
+                    <div className="absolute left-1/2 -bottom-12 transform -translate-x-1/2 z-20">
+                        <img
+                            src={card.profilePhoto.startsWith('/uploads') ? '/api' + card.profilePhoto : card.profilePhoto}
+                            alt="Profile"
+                            className="w-24 h-24 md:w-28 md:h-28 rounded-full border-4 border-white shadow-lg object-cover bg-gray-100"
+                        />
+                    </div>
+                )}
+            </div>
+            <div className="pt-16 pb-8 px-6 flex flex-col items-center text-center">
+                {card.title && <div className="uppercase tracking-widest text-sm text-gray-700 font-bold mb-3">{card.title}</div>}
+                {(card.firstName || card.lastName) && (
+                    <div className="text-2xl md:text-3xl font-extrabold text-gray-900 mb-1">{card.firstName} {card.lastName}</div>
+                )}
+                {card.jobTitle && <div className="text-lg text-gray-600 font-medium mb-1">{card.jobTitle}</div>}
+                {card.businessName && <div className="text-base text-gray-400 mb-4">{card.businessName}</div>}
+            </div>
+        </div>
+    );
+}
 
 export default App;

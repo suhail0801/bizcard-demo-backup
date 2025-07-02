@@ -25,7 +25,7 @@ app.use(morgan("dev"));
 app.use(helmet());
 app.use(express.json());
 
-app.use('/images/', express.static(path.join(__dirname, "uploads/")));
+app.use('/uploads', express.static(path.join(__dirname, '../frontend/public/uploads')));
 
 
 app.get("/validate", isLoggedIn, (req, res) => {
@@ -69,6 +69,19 @@ app.get("/template/:id", api.getCardTemplateById)
 app.post("/template", api.addTemplate)
 
 app.delete("/cards/:id", api.deleteSavedCard);
+
+// Contact Routes
+app.post("/contacts", isLoggedIn, api.addContact);
+app.get("/contacts", isLoggedIn, api.getContacts);
+app.delete("/contacts/:id", isLoggedIn, api.deleteContact);
+
+// User profile routes
+app.get('/user/profile', isLoggedIn, api.getUserProfile); // current user
+app.get('/user/profile/:id', api.getUserProfile); // by id (public)
+app.put('/user/profile', isLoggedIn, api.updateUserProfile);
+
+// Public: get all contacts related to a user (for biz card page)
+app.get('/contacts/allrelated', api.getAllRelatedContacts);
 
 // app.get('/api/v1/userid',getUserId, (req, res) => {
 //   console.log('hi cc');

@@ -7,6 +7,10 @@ import { SiBuymeacoffee, SiDiaspora, SiCodeberg, SiQuora, SiOpencollective, SiPe
 import { useParams, useNavigate } from "react-router-dom";
 import { toast, ToastContainer } from 'react-toastify';
 import "react-toastify/dist/ReactToastify.css";
+import PhoneInput from 'react-phone-input-2';
+import 'react-phone-input-2/lib/style.css';
+import { parsePhoneNumberFromString, isValidPhoneNumber } from 'libphonenumber-js';
+import defaultAvatar from '../assets/default-avatar.jpg';
 
 
 function App() {
@@ -19,8 +23,43 @@ function App() {
             top: 0,
             behavior: 'smooth'
         });
-        if (id != 0) getCard()
-        validateToken()
+        if (id != 0) {
+            getCard();
+        } else {
+            // Autofill from user profile for new card
+            fetch('/user/profile', {
+                headers: {
+                    Authorization: `Bearer ${localStorage.getItem('jwtToken')}`
+                }
+            })
+                .then(res => res.json())
+                .then(data => {
+                    let mobile = data.mobile || '';
+                    if (mobile.startsWith('+')) {
+                        // If already has a space after country code, do not re-normalize
+                        if (!/^\+\d{1,3} \d+/.test(mobile)) {
+                            // Remove all spaces first
+                            mobile = mobile.replace(/\s+/g, '');
+                            const matchAuto = mobile.match(/^(\+\d{1,3})(\d+)/);
+                            if (matchAuto) {
+                                mobile = matchAuto[1] + ' ' + matchAuto[2];
+                            }
+                        }
+                    }
+                    setFormData(prev => ({
+                        ...prev,
+                        email: data.email || '',
+                        mobile: mobile,
+                        jobTitle: data.jobTitle || '',
+                        businessName: data.businessName || '',
+                        profilePhoto: data.profilePhoto || prev.profilePhoto,
+                        firstName: data.username || '',
+                        lastName: '',
+                        // Optionally: firstName, lastName if you want to split username
+                    }));
+                });
+        }
+        validateToken();
     }, []);
 
     const [formData, setFormData] = useState({
@@ -52,10 +91,37 @@ function App() {
 
     const [errors, setErrors] = useState({});
     const [socialLinkInput, setSocialLinkInput] = useState({ platform: '', url: '' });
+    const [phoneError, setPhoneError] = useState('');
+
+    function formatPhone(phone) {
+        if (!phone) return '';
+        const phoneNumber = parsePhoneNumberFromString(phone);
+        if (phoneNumber) {
+            return phoneNumber.formatInternational();
+        }
+        return phone;
+    }
 
     const handleChange = (e) => {
         const { name, value } = e.target;
-        setFormData({ ...formData, [name]: value });
+        if (name === 'mobile') {
+            let normalized = value;
+            // Only normalize if not already in '+<code> <number>' format
+            if (normalized.startsWith('+')) {
+                // If already has a space after country code, do not re-normalize
+                if (!/^\+\d{1,4} \d+/.test(normalized)) {
+                    // Remove all spaces first
+                    normalized = normalized.replace(/\s+/g, '');
+                    const match = normalized.match(/^(\+\d{1,4})(\d+)/);
+                    if (match) {
+                        normalized = match[1] + ' ' + match[2];
+                    }
+                }
+            }
+            setFormData({ ...formData, [name]: normalized });
+        } else {
+            setFormData({ ...formData, [name]: value });
+        }
     };
 
     const handleFileChange = (e) => {
@@ -190,13 +256,23 @@ function App() {
             Authorization: `Bearer ${storedToken}`
         };
 
+        // Normalize mobile before saving
+        let mobile = formData.mobile || '';
+        if (mobile.startsWith('+')) {
+            // Remove all spaces first
+            mobile = mobile.replace(/\s+/g, '');
+            const matchSave = mobile.match(/^(\+\d{1,3})(\d+)/);
+            if (matchSave) {
+                mobile = matchSave[1] + ' ' + matchSave[2];
+            }
+        }
         const response = await fetch(url, {
             method: formData.id ? "PUT" : "POST",
             headers: {
                 'Content-Type': 'application/json',
                 ...headers
             },
-            body: JSON.stringify({ ...formData, featuredContent }),
+            body: JSON.stringify({ ...formData, mobile, featuredContent }),
         });
 
         if (!response.ok) {
@@ -267,11 +343,15 @@ function App() {
         }
 
         const res = await response.json();
-        // if (!res.auth) {
-        //     location.href = " login"
-        // }
-        console.log(res);
-        setFormData(res)
+        // Defensive: ensure color fields are always set for the form
+        setFormData(prev => ({
+            ...prev,
+            ...res,
+            primaryBackgroundColor: (res.primaryBackgroundColor !== undefined && res.primaryBackgroundColor !== null && res.primaryBackgroundColor !== "") ? res.primaryBackgroundColor : "#ffffff",
+            secondaryBackgroundColor: (res.secondaryBackgroundColor !== undefined && res.secondaryBackgroundColor !== null && res.secondaryBackgroundColor !== "") ? res.secondaryBackgroundColor : "#f3f4f6",
+            textColor: (res.textColor !== undefined && res.textColor !== null && res.textColor !== "") ? res.textColor : "#000000",
+            titleColor: (res.titleColor !== undefined && res.titleColor !== null && res.titleColor !== "") ? res.titleColor : "#000000"
+        }))
         setConfig(res.config ? res.config : config)
         setFeaturedContent(res.featuredContent ? res.featuredContent : featuredContent)
     }
@@ -309,7 +389,6 @@ function App() {
                                 <img src={"/api" + formData.logo} alt="Cover" className="h-16 mt-2 rounded-lg" /> :
                                 <img src={formData.logo} alt="Cover" className="h-16 mt-2 rounded-lg" />
                             }
-                            {/* {formData && formData.logo && <img src={formData.logo} alt="Logo preview" className="h-16 mt-2 rounded-lg" />} */}
                         </div>
                     </div>
                     <div className="mb-4 flex flex-row-reverse justify-between">
@@ -332,11 +411,7 @@ function App() {
                             {errors.coverPhoto && <p className="text-red-500 mt-2">{errors.coverPhoto}</p>}
                             <p className="mt-2 text-gray-400">suggested format: svg, jpeg, png or gif</p>
                             <p className="mt-2 text-gray-400">Recommended cover photo size is 960 x 640 pixels, with an aspect ratio of 3:2</p>
-                            {formData.coverPhoto.includes("/images") ?
-                                <img src={"/api" + formData.coverPhoto} alt="Cover photo" className="w-32 h-20 mt-2 rounded-lg" /> :
-                                <img src={formData.coverPhoto} alt="Cover" className="w-32 h-20 mt-2 rounded-lg" />
-                            }
-                            {/* {formData.coverPhoto && <img src={formData.coverPhoto} alt="Cover photo preview" className="w-32 h-20 mt-2 rounded-lg" />} */}
+                            <img src={formData.coverPhoto.includes("/images") ? "/api" + formData.coverPhoto : formData.coverPhoto} alt="Cover" className="w-full h-40 object-cover mb-4 rounded-lg" style={{ aspectRatio: '3/2' }} />
                         </div>
                     </div>
                 </div>
@@ -362,11 +437,21 @@ function App() {
                                 {errors.profilePhoto && <p className="text-red-500 mt-2">{errors.profilePhoto}</p>}
                                 <p className="mt-2 text-gray-400">suggested format: jpeg, png or gif</p>
                                 <p className="mt-2 text-gray-400">Recommended profile photo size is 320 x 320 pixels, with an aspect ratio of 1:1</p>
-                                {formData.profilePhoto.includes("/images") ?
-                                    <img src={"/api" + formData.profilePhoto} alt="Cover" className="w-16 h-16 mt-2 rounded-lg" /> :
-                                    <img src={formData.profilePhoto} alt="Cover" className="w-16 h-16 mt-2 rounded-lg" />
-                                }
-                                {/* {formData.profilePhoto && <img src={formData.profilePhoto} alt="Profile photo preview" className="w-16 h-16 mt-2 rounded-lg" />} */}
+                                {formData.profilePhoto ? (
+                                    <img
+                                        src={formData.profilePhoto.includes("/images") ? "/api" + formData.profilePhoto : formData.profilePhoto}
+                                        alt="Profile"
+                                        className="w-16 h-16 mt-2 rounded-full object-cover border-2 border-gray-700"
+                                        style={{ aspectRatio: '1/1' }}
+                                    />
+                                ) : (
+                                    <img
+                                        src={defaultAvatar}
+                                        alt="Default"
+                                        className="w-16 h-16 mt-2 rounded-full object-cover border-2 border-gray-700"
+                                        style={{ aspectRatio: '1/1' }}
+                                    />
+                                )}
                             </div>
                         </div>
                     </div>
@@ -447,13 +532,32 @@ function App() {
                             </div>
                             <div className="mb-4">
                                 <label className="block text-gray-400 mb-2"> Mobile </label>
-                                <input
-                                    type="text"
-                                    name="mobile"
+                                <PhoneInput
+                                    country={'in'}
                                     value={formData.mobile}
-                                    onChange={handleChange}
-                                    className="w-full text-gray-300 bg-black  p-3  rounded-lg"
+                                    onChange={phone => {
+                                        const value = '+' + phone;
+                                        setFormData({ ...formData, mobile: value });
+                                        if (!isValidPhoneNumber(value)) {
+                                            setPhoneError('Please enter a valid phone number.');
+                                        } else {
+                                            setPhoneError('');
+                                        }
+                                    }}
+                                    inputProps={{
+                                        name: 'mobile',
+                                        required: true,
+                                        autoFocus: false,
+                                        className: 'w-full p-3 rounded-lg bg-white text-black border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none',
+                                    }}
+                                    containerClass="w-full"
+                                    inputClass="w-full bg-white text-black p-3 rounded-lg"
+                                    buttonClass="bg-white text-black border-r border-gray-300"
+                                    dropdownStyle={{ zIndex: 1000 }}
                                 />
+                                <div className="text-xs text-gray-500 mt-1">Enter your phone number with country code.</div>
+                                {phoneError && <div className="text-xs text-red-500 mt-1">{phoneError}</div>}
+                                <div className="mt-2 text-gray-400">{formatPhone(formData.mobile)}</div>
                             </div>
                             <div className="mb-4">
                                 <label className="block text-gray-400 mb-2"> Email </label>
@@ -699,30 +803,6 @@ function App() {
                                 Add Featured Content
                             </button>
                         </div>
-                        <div className="mb-4 p-4 bg-gray-800 rounded-lg mt-8">
-                            <div className="flex items-center my-4">
-                                <input
-                                    id="default-checkbox"
-                                    type="checkbox"
-                                    checked={config.expose}
-                                    value={config.expose}
-                                    onChange={(e) => setConfig({ ...config, expose: e.target.checked })}
-                                    className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600 rounded-lg"
-                                />
-                                <label for="default-checkbox" className="ms-2 text-sm font-medium test-white">  Let others see this ? </label>
-                            </div>
-                            <div className="flex items-center my-4">
-                                <input
-                                    id="default-checkbox"
-                                    type="checkbox"
-                                    checked={config.enableAddToContact}
-                                    value={config.enableAddToContact}
-                                    onChange={(e) => setConfig({ ...config, enableAddToContact: e.target.checked })}
-                                    className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600 rounded-lg"
-                                />
-                                <label for="default-checkbox" className="ms-2 text-sm font-medium test-white"> Enable Add To Contacts button </label>
-                            </div>
-                        </div>
                         <div className='flex justify-end items-center'>
                             <button type="submit" className="bg-green-500 hover:bg-green-400 text-white font-bold py-2 px-4 rounded-xl">
                                 Save Card
@@ -732,24 +812,36 @@ function App() {
                     </form>
                 </div>
             </div>
-            <div className="max-w-md mx-auto w-1/2  p-4 rounded-lg relative">
-                <div style={{ backgroundColor: formData.primaryBackgroundColor }} className={`p-4 rounded-lg fixed w-96 shadow-xl h-[80%] overflow-y-scroll`}>
+            <div className="max-w-md mx-auto w-1/2 p-4 rounded-lg relative">
+                <div
+                    style={{ backgroundColor: formData.primaryBackgroundColor, top: '2rem', bottom: '2rem' }}
+                    className={`p-4 rounded-lg sticky top-8 w-96 shadow-xl max-h-[80vh] overflow-y-auto`}
+                >
                     <h2 className="text-lg font-bold mb-4 text-center">LIVE PREVIEW</h2>
                     {formData.logo.includes("/images") ?
                         <img src={"/api" + formData.logo} alt="Cover" className="p-4 absolute w-24 object-cover mb-4 rounded-lg" /> :
                         <img src={formData.logo} alt="Cover" className="p-4 absolute w-24 object-cover mb-4 rounded-lg" />
                     }
-                    {formData.profilePhoto.includes("/images") ?
-                        <img src={"/api" + formData.profilePhoto} alt="Cover" className="w-28 shadow-2xl mt-2 z-50  absolute  right-1/2 translate-x-1/2 top-[160px]  mx-auto rounded-full mb-4" /> :
-                        <img src={formData.profilePhoto} alt="Cover" className="w-28 shadow-2xl mt-2 z-50  absolute  right-1/2 translate-x-1/2 top-[160px]  mx-auto rounded-full mb-4" />
+                    {formData.profilePhoto ? (
+                        <img
+                            src={formData.profilePhoto.includes("/images") ? "/api" + formData.profilePhoto : formData.profilePhoto}
+                            alt="Profile"
+                            className="w-28 h-28 shadow-2xl mt-2 z-50 absolute right-1/2 translate-x-1/2 top-[160px] mx-auto rounded-full mb-4 object-cover border-4 border-gray-700"
+                            style={{ aspectRatio: '1/1' }}
+                        />
+                    ) : (
+                        <img
+                            src={defaultAvatar}
+                            alt="Default"
+                            className="w-28 h-28 shadow-2xl mt-2 z-50 absolute right-1/2 translate-x-1/2 top-[160px] mx-auto rounded-full mb-4 object-cover border-4 border-gray-700"
+                            style={{ aspectRatio: '1/1' }}
+                        />
+                    )}
+                    {formData.coverPhoto.includes("/images") ?
+                        <img src={"/api" + formData.coverPhoto} alt="Cover" className="w-full h-40 object-cover mb-4 rounded-lg" style={{ aspectRatio: '3/2' }} /> :
+                        <img src={formData.coverPhoto} alt="Cover" className="w-full h-40 object-cover mb-4 rounded-lg" />
                     }
-                    {/* {formData.logo && <img src={formData.logo} alt="Cover" className="p-4 absolute w-24 object-cover mb-4 rounded-lg" />}
-                    {formData.profilePhoto && <img src={formData.profilePhoto} alt="Profile" className="w-28 shadow-2xl mt-2 z-50  absolute  right-1/2 translate-x-1/2 top-[160px]  mx-auto rounded-full mb-4" />} */}
                     <div className="text-center">
-                        {formData.coverPhoto.includes("/images") ?
-                            <img src={"/api" + formData.coverPhoto} alt="Cover" className="w-full h-40 object-cover mb-4 rounded-lg" /> :
-                            <img src={formData.coverPhoto} alt="Cover" className="w-full h-40 object-cover mb-4 rounded-lg" />
-                        }
                         <div style={{ backgroundColor: formData.secondaryBackgroundColor }} className="p-4 rounded-lg mb-4 shadow-xl">
 
                             <h3 style={{ color: formData.titleColor }} className="text-2xl font-bold mt-10">
@@ -794,7 +886,7 @@ function App() {
                                     {item.type === 'media' && item.content && <video src={item.content} controls autoPlay loop className="w-full p-4 rounded-lg shadow-xl" style={{ backgroundColor: formData.secondaryBackgroundColor }} />}
                                     {item.type === 'product' && (
                                         <div style={{ backgroundColor: formData.secondaryBackgroundColor }} className="text-center p-4 rounded-lg">
-                                            {item.image && <img src={`/api${item.image}`} alt="Product" className="w-full rounded-lg mb-2" />}
+                                            {item.image && <img src={`/api${item.image}`} alt="Product" className="w-full h-32 object-cover rounded-lg mb-2" style={{ aspectRatio: '4/3' }} />}
                                             <h3 style={{ color: formData.titleColor }} className="text-xl font-bold">{item.title}</h3>
                                             <p style={{ color: formData.textColor }} className="text-gray-400">{item.description}</p>
                                             <p style={{ color: formData.textColor }} className="text-lg">{item.price}</p>

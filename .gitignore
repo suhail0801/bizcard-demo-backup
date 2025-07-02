@@ -1,1 +1,26 @@
 node_modules
+.env
+.env.*
+dist
+build
+.DS_Store
+*.log
+npm-debug.log
+yarn-debug.log
+yarn-error.log
+uploads/
+coverage
+.idea/
+.vscode/
+*.local.js
+*.local.json
+*.sqlite
+*.bak
+*.tmp
+# OS generated files
+Thumbs.db
+Desktop.ini
+# Mac system files
+__MACOSX/
+# Optional: ignore database backups
+DB_Backup/

@@ -15,29 +15,29 @@ const isLoggedIn = async (req, res, next) => {
     try {
       // Get token from header
       token = req.headers.authorization.split(' ')[1]
-      if(token == "null")  return res.status(400).send({auth: false, message: "not logged in"})
+      if(token == "null")  return res.status(400).json({auth: false, message: "not logged in"})
       // Verify token
       const decoded = jwt.verify(token, process.env.JWT_SECRET)
-      console.log(decoded, "decoded")
+      console.log('Decoded JWT:', decoded)
       // Get user from the token
       req.user = await api.findUserById(decoded.id)
       console.log(req.user.email, "req.user")
       
       if(!req.user) {
-        return res.status(400).send({auth: false, message: "not logged in"})
+        console.error('No user found for decoded id:', decoded.id)
+        return res.status(400).json({auth: false, message: "not logged in"})
       }
 
       return next()
     } catch (e) {
       console.error('Token verification error:', e);
-      return res.status(401)
-      // throw new Error('Not authorized')
+      return res.status(401).json({auth: false, message: "Token verification failed"})
     }
   }
 
   if (!token) {
     // res.status(401)
-    return res.status(400).send('Not authorized, no token')
+    return res.status(400).json({auth: false, message: 'Not authorized, no token'})
   }
 }
 

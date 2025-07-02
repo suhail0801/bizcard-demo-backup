@@ -1,7 +1,6 @@
-
 // Hi.js
 import React from 'react';
-
+import { parsePhoneNumberFromString } from 'libphonenumber-js';
 
 import { HiOutlineMail } from "react-icons/hi"
 import { TbWorldWww } from "react-icons/tb"
@@ -22,7 +21,14 @@ import {
   FaSpotify
 } from "react-icons/fa";
 
-
+function formatPhone(phone) {
+  if (!phone) return '';
+  const phoneNumber = parsePhoneNumberFromString(phone);
+  if (phoneNumber) {
+    return phoneNumber.formatInternational();
+  }
+  return phone;
+}
 
 const Card2 = ({ contactData, primaryActionData,secondaryActionData, selectedImage ,selectedLogo,selectedProfile, primaryActionBtns,
   secondaryActionBtns,}) => {
@@ -69,7 +75,7 @@ const Card2 = ({ contactData, primaryActionData,secondaryActionData, selectedIma
    <a href={`tel${primaryActionData.mobile}`}target='blank'  className="h-7 w-7 bg-green-500 flex justify-center items-center rounded-full ml-5">
       <Phone className="h-4 w-9 text-white icon" />
     </a>
-    
+    <span className="ml-2 text-black font-montserrat text-xs">{formatPhone(primaryActionData.mobile)}</span>
   </div>
 )}
 

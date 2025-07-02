@@ -6,26 +6,21 @@ import { QRCodeSVG } from 'qrcode.react';
 import { FaWhatsapp, FaFacebook, FaTwitter, FaLinkedin, FaPlus } from 'react-icons/fa';
 import html2canvas from 'html2canvas';
 import Switch from "react-switch";
+import defaultAvatar from '../assets/default-avatar.jpg';
 
 const key = 123; // The encryption/decryption key
-
-// Hardcoded base URL for QR code (change this for production)
-const QR_BASE_URL = "http://192.168.1.13:5173";
+const QR_BASE_URL = window.location.origin;
 
 function encryptData(id) {
   return id ^ key;
 }
 
 function getNetworkUrl(path = "") {
-  // Try to use the network IP if available, fallback to window.location.origin
-  const { protocol, hostname, port } = window.location;
-  let host = hostname;
-  // If localhost, try to use the network IP
-  if (host === "localhost" || host === "127.0.0.1") {
-    // Try to get the local network IP from window.location (works if accessed via IP)
-    host = window.location.host.replace(/:.*/, "");
-  }
-  return `${protocol}//${host}${port ? ":" + port : ""}${path}`;
+  // Always use your network IP for sharing
+  const protocol = window.location.protocol;
+  const port = window.location.port ? ":" + window.location.port : "";
+  const networkIp = "192.168.1.4"; // <-- Replace with your actual IP if different
+  return `${protocol}//${networkIp}${port}${path}`;
 }
 
 function Cards() {
@@ -53,33 +48,27 @@ function Cards() {
   async function validateToken() {
     try {
       console.log("Validating token...");
-    const url = `/api/validate`;
-
-    const storedToken = localStorage.getItem('jwtToken');
+      const url = `/api/validate`;
+      const storedToken = localStorage.getItem('jwtToken');
       console.log("Stored token:", storedToken ? "exists" : "missing");
-
-    const headers = {
-      Authorization: `Bearer ${storedToken}`
-    };
-
-    const response = await fetch(url, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        ...headers
+      const headers = {
+        Authorization: `Bearer ${storedToken}`
+      };
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          ...headers
+        }
+      });
+      if (!response.ok) {
+        setError(`Failed to validate token: ${response.status}`);
+        navigate("/login");
+        return;
       }
-    });
-
-    const res = await response.json();
+      const res = await response.json();
       console.log("Validate response:", res);
-
-    if (response.status != 200) {
-        console.log("Token validation failed, redirecting to login");
-      navigate("/login");
-    } else {
-        console.log("Token validation successful");
       setProfile(res);
-      }
     } catch (err) {
       console.error("Error in validateToken:", err);
       setError(err.message);
@@ -89,30 +78,26 @@ function Cards() {
   async function getCards() {
     try {
       console.log("Getting cards...");
-    const url = `/api/cards`;
-
-    const storedToken = localStorage.getItem('jwtToken');
-
-    const headers = {
-      Authorization: `Bearer ${storedToken}`
-    };
-
-    const response = await fetch(url, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        ...headers
-      }
-    });
-
-    if (!response.ok) {
-        console.log("Error getting cards:", response.status);
+      const url = `/api/cards`;
+      const storedToken = localStorage.getItem('jwtToken');
+      const headers = {
+        Authorization: `Bearer ${storedToken}`
+      };
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          ...headers
+        }
+      });
+      if (!response.ok) {
         setError(`Failed to fetch cards: ${response.status}`);
-    }
-
-    const res = await response.json();
+        setLoading(false);
+        return;
+      }
+      const res = await response.json();
       console.log("Cards response:", res);
-      setCards(res || [])
+      setCards(res || []);
       setLoading(false);
     } catch (err) {
       console.error("Error in getCards:", err);
@@ -143,8 +128,8 @@ function Cards() {
   }
 
   function handleShare(card) {
-    // Use hardcoded network IP for QR code
-    const url = `${QR_BASE_URL}/digital-card?user=${profile.username}&type=digital-card&org=onfra&query=${card.id}`;
+    // Use the old digital-card link format for QR and sharing
+    const url = `${getNetworkUrl()}/digital-card?user=${profile.username}&type=digital-card&org=onfra&query=${card.id}`;
     setQrUrl(url);
     setQrModalOpen(true);
   }
@@ -301,15 +286,33 @@ function Cards() {
               <Link to={`/build/${card.id}`} >
                 <div className="preview h-[80%] m-3 rounded-md transition-all overflow-hidden w-96">
                     <div className="">
-                    <div style={{ backgroundColor: card.primaryBackgroundColor || '#ffffff' }} className={`p-4 rounded-lg w-96 shadow-xl h-[80%] relative `}>
+                    <div style={{ backgroundColor: card.primaryBackgroundColor?.trim() ? card.primaryBackgroundColor : '#ffffff' }} className={`p-4 rounded-lg w-96 shadow-xl h-[80%] relative `}>
                       {card.logo && card.logo.includes("/images") ?
                           <img src={"/api" + card.logo} alt="Cover" className="p-4 w-24 absolute object-cover mb-4 rounded-lg" /> :
                         card.logo ? <img src={card.logo} alt="Cover" className="p-4 w-24 absolute object-cover mb-4 rounded-lg" /> : null
                         }
-                      {card.profilePhoto && card.profilePhoto.includes("/images") ?
-                          <img src={"/api" + card.profilePhoto} alt="Cover" className="w-28 shadow-2xl mt-2 z-50  absolute right-1/2 translate-x-1/2  top-[110px] mx-auto rounded-full mb-4" /> :
-                        card.profilePhoto ? <img src={card.profilePhoto} alt="Cover" className="w-28 shadow-2xl mt-2 z-50  absolute right-1/2 translate-x-1/2  top-[110px] mx-auto rounded-full mb-4" /> : null
-                      }
+                      {(!qrModalOpen && card.profilePhoto && card.profilePhoto.startsWith('/uploads/profile_photos')) ? (
+                        <img
+                          src={"/api" + card.profilePhoto}
+                          alt="Profile"
+                          className="w-28 h-28 shadow-2xl mt-2 z-50 absolute right-1/2 translate-x-1/2 top-[110px] mx-auto rounded-full mb-4 object-cover border-4 border-gray-700"
+                          style={{ aspectRatio: '1/1' }}
+                        />
+                      ) : (!qrModalOpen && card.profilePhoto) ? (
+                        <img
+                          src={card.profilePhoto}
+                          alt="Profile"
+                          className="w-28 h-28 shadow-2xl mt-2 z-50 absolute right-1/2 translate-x-1/2 top-[110px] mx-auto rounded-full mb-4 object-cover border-4 border-gray-700"
+                          style={{ aspectRatio: '1/1' }}
+                        />
+                      ) : (!qrModalOpen ? (
+                        <img
+                          src={defaultAvatar}
+                          alt="Default"
+                          className="w-28 h-28 shadow-2xl mt-2 z-50 absolute right-1/2 translate-x-1/2 top-[110px] mx-auto rounded-full mb-4 object-cover border-4 border-gray-700"
+                          style={{ aspectRatio: '1/1' }}
+                        />
+                      ) : null)}
                       <div className="text-center">
                         {card.coverPhoto && card.coverPhoto.includes("/images") ?
                           <img src={"/api" + card.coverPhoto} alt="Cover" className="w-full h-40 object-cover mb-4 rounded-lg" /> :
