@@ -217,8 +217,11 @@ function Cards() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-900 p-3 text-white">
-      <h1 className="my-5 !text-2xl font-semibold tracking-tight text-white sm:text-6xl"> My Cards </h1>
+    <div className="min-h-screen bg-onfra-grayBg p-6 font-sans">
+      <div className="flex items-center justify-between mb-8">
+        <h1 className="text-3xl font-bold text-onfra-green">My Cards</h1>
+        {/* Removed + Create Card button as requested */}
+      </div>
       
       {error && (
         <div className="bg-red-500 text-white p-4 rounded-lg mb-4">
@@ -375,13 +378,13 @@ function Cards() {
         {/* Create New Card grid item */}
         {!loading && (
           <div
-            className="w-full md:w-full lg:w-full h-[470px] border-2 border-dashed border-blue-400 rounded-md flex flex-col items-center justify-center cursor-pointer hover:bg-blue-50 transition-all"
+            className="w-full md:w-full lg:w-full h-[470px] border-2 border-dashed border-[#00A86B] rounded-lg flex flex-col items-center justify-center cursor-pointer transition-all bg-[#00A86B] hover:bg-[#008f5d] text-white p-6"
             style={{ minWidth: '320px', minHeight: '400px' }}
             onClick={() => navigate('/build/0')}
           >
             <div className="flex flex-col items-center justify-center h-full w-full">
-              <FaPlus className="text-5xl text-blue-400 mb-4" />
-              <span className="text-xl font-semibold text-blue-500">Create New Card</span>
+              <FaPlus className="text-5xl mb-4" />
+              <span className="text-xl font-semibold">Create New Card</span>
             </div>
           </div>
         )}

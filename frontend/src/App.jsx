@@ -32,7 +32,9 @@ import Footer from './pages/Footer';
 import UserSavedCardList from './react_components/UserSavedCardList';
 import UserSavedCard from './react_components/UserSavedCard';
 import MyContacts from "./pages/MyContacts"; // Import MyContacts component
-
+import Dashboard from './pages/Dashboard';
+import DashboardLayout from './pages/DashboardLayout';
+import BuildWithBoundary from './pages/Build';
 
 const ProtectedRoute = ({ element }) => {
   const { state } = useAuth();
@@ -69,16 +71,21 @@ function App() {
           <Route path="/" element={<Landingpage />} />
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
-          <Route path="/build/:id" element={<ProtectedRoute element={<Build />} />} />
-          <Route path="/cards" element={<ProtectedRoute element={<Cards />} />} />
-          <Route path="/contacts" element={<ProtectedRoute element={<MyContacts />} />} />
-          <Route path="/digital-card/" element={<ProtectedRoute element={<DigitalCard />} />} />
-          {/* <Route path="/home" element={<ProtectedRoute element={<BizCard />} />} /> */}
-          <Route path="/Display" element={<ProtectedRoute element={<Display />} />} />
-          <Route path="/home" element={<ProtectedRoute element={<HomePage />} />} />
-          <Route path="/be/:templateId" element={<ProtectedRoute element={<UserSavedCard />} />} />
-          <Route path="/mycards" element={<ProtectedRoute element={<UserSavedCardList />} />} />
-          <Route path="/mycard/:cardId" element={<ProtectedRoute element={<UserSavedCard />} />} />
+
+          {/* Dashboard layout with persistent sidebar for protected routes */}
+          <Route element={<ProtectedRoute element={<DashboardLayout />} />}>
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/cards" element={<Cards />} />
+            <Route path="/contacts" element={<MyContacts />} />
+            <Route path="/create" element={<Build />} />
+            <Route path="/build/:id" element={<Build />} />
+            <Route path="/digital-card/" element={<DigitalCard />} />
+            <Route path="/Display" element={<Display />} />
+            <Route path="/home" element={<HomePage />} />
+            <Route path="/be/:templateId" element={<UserSavedCard />} />
+            <Route path="/mycards" element={<UserSavedCardList />} />
+            <Route path="/mycard/:cardId" element={<UserSavedCard />} />
+          </Route>
 
         </Routes>
         <Footer />

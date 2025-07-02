@@ -70,6 +70,9 @@ app.post("/template", api.addTemplate)
 
 app.delete("/cards/:id", api.deleteSavedCard);
 
+// Add route to get user by email
+app.get('/user/profile', api.getUserByEmail);
+
 // app.get('/api/v1/userid',getUserId, (req, res) => {
 //   console.log('hi cc');
 //   // res.send(`userId: ${req.customData} Hi there!`);

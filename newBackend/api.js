@@ -664,6 +664,19 @@ const deleteSavedCard = async (req, res) => {
   res.json({ message: "Card deleted" });
 };
 
+// Add: Get user by email
+const getUserByEmail = async (req, res) => {
+  const { email } = req.query;
+  if (!email) return res.status(400).json({ message: 'Email is required' });
+  try {
+    const user = await User.findOne({ where: { email } });
+    if (!user) return res.status(404).json({ message: 'User not found' });
+    res.json({ username: user.username, email: user.email, fullName: user.username });
+  } catch (error) {
+    res.status(500).json({ message: 'Internal Server Error' });
+  }
+};
+
 module.exports = {
     getUsers,
     registerUser,
@@ -683,4 +696,5 @@ module.exports = {
     getPublicCard,
     findUserById,
     deleteSavedCard,
+    getUserByEmail,
 }

@@ -15,6 +15,14 @@ module.exports = {
     extend: {
 
       colors: {
+        // Onfra branding
+        onfra: {
+          green: '#20C997', // primary
+          greenDark: '#169c74',
+          grayBg: '#F8F9FA', // light background
+          grayBorder: '#E9ECEF',
+          dark: '#212529',
+        },
         visit_desk_green: 'rgb(40, 213, 122)',
         visit_desk_green_variant: 'rgb(16,220,210)',
         visit_desk_white: 'rgb(255,255,255)',
@@ -56,13 +64,20 @@ module.exports = {
           foreground: "hsl(var(--card-foreground))",
         },
       },
-      borderRadius: {
-        lg: `var(--radius)`,
-        md: `calc(var(--radius) - 2px)`,
-        sm: "calc(var(--radius) - 4px)",
-      },
       fontFamily: {
-        sans: ["var(--font-sans)", ...fontFamily.sans],
+        // Onfra uses Inter and modern sans fonts
+        sans: ['Inter', 'ui-sans-serif', 'system-ui', ...fontFamily.sans],
+        inter: ['Inter', 'sans-serif'],
+        montserrat: ['Montserrat', 'sans-serif'],
+        roboto_light: ['Roboto', 'sans-serif'],
+        roboto_medium: ['Roboto', 'sans-serif'],
+        cursive: ['Cedarville Cursive', 'cursive'],
+        merriweather: ['Merriweather', 'serif'],
+      },
+      borderRadius: {
+        lg: '1rem', // more rounded for modern look
+        md: '0.5rem',
+        sm: '0.25rem',
       },
       keyframes: {
         "accordion-down": {
@@ -78,17 +93,6 @@ module.exports = {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
       },
-    },
-    fontFamily: {
-      roboto_light: ['Roboto', 'sans-serif'],
-      roboto_medium: ['Roboto', 'sans-serif'],
-      cursive: ['Cedarville Cursive', 'cursive'],
-      merriweather: ['Merriweather', 'serif'],
-      inter: ['Inter', 'sans-serif'],
-      montserrat: ['Montserrat', 'sans-serif'],
-
-
-
     },
   },
   plugins: [require("tailwindcss-animate")],

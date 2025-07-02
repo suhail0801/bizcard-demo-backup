@@ -37,8 +37,8 @@ const Login = () => {
     } 
 
     if (response.status == 200) {
-      navigate("/");
-  }
+      navigate("/dashboard");
+    }
     // const res = await response.json();
     // return res.auth
 
@@ -59,7 +59,7 @@ const Login = () => {
           if (res.data.token) {
             localStorage.setItem("jwtToken", res.data.token);
             axios.defaults.headers.common["Authorization"] = `Bearer ${res.data.token}`;
-            navigate("/");
+            navigate("/dashboard");
           } else {
             alert("Authentication failed. No token received.");
           }
