@@ -1,10 +1,17 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../AuthContext';
 import 'tailwindcss/tailwind.css';
 
 
 const LandingPage = () => {
   const navigate = useNavigate();
+  const { state } = useAuth();
+  useEffect(() => {
+    if (state.isAuthenticated) {
+      navigate('/dashboard', { replace: true });
+    }
+  }, [state.isAuthenticated, navigate]);
   return (
     <div className="text-white h-[70vh]">
       {/* Hero Section */}
