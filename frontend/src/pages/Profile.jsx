@@ -110,9 +110,9 @@ const Profile = () => {
   if (loading) return <div className="p-8 text-center">Loading...</div>;
 
   return (
-    <div className="max-w-xl mx-auto p-8 bg-gray-900 text-white rounded-lg mt-8 shadow-lg">
+    <div className="max-w-xl mx-auto p-8 bg-white text-gray-900 rounded-xl mt-8 shadow flex flex-col items-center border border-gray-100">
       <h2 className="text-3xl font-bold mb-6 text-center">My Profile</h2>
-      <form onSubmit={handleSave} className="space-y-6">
+      <form onSubmit={handleSave} className="space-y-6 w-full">
         <div className="flex flex-col items-center">
           <label htmlFor="profilePhoto" className="cursor-pointer">
             <img
@@ -138,7 +138,7 @@ const Profile = () => {
             name="username"
             value={profile.username}
             onChange={handleChange}
-            className="w-full p-2 rounded bg-gray-800 text-white"
+            className="w-full p-2 rounded bg-gray-100 text-gray-900 border border-gray-200"
             required
           />
         </div>
@@ -149,7 +149,7 @@ const Profile = () => {
             name="email"
             value={profile.email}
             onChange={handleChange}
-            className="w-full p-2 rounded bg-gray-800 text-white"
+            className="w-full p-2 rounded bg-gray-100 text-gray-900 border border-gray-200"
             required
           />
         </div>
@@ -189,7 +189,7 @@ const Profile = () => {
             name="jobTitle"
             value={profile.jobTitle || ''}
             onChange={handleChange}
-            className="w-full p-2 rounded bg-gray-800 text-white"
+            className="w-full p-2 rounded bg-gray-100 text-gray-900 border border-gray-200"
             required
           />
         </div>
@@ -200,13 +200,13 @@ const Profile = () => {
             name="businessName"
             value={profile.businessName || ''}
             onChange={handleChange}
-            className="w-full p-2 rounded bg-gray-800 text-white"
+            className="w-full p-2 rounded bg-gray-100 text-gray-900 border border-gray-200"
             required
           />
         </div>
         <button
           type="submit"
-          className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+          className="w-full bg-[#00C853] hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg shadow-md transition-all hover:scale-[1.02]"
           disabled={saving}
         >
           {saving ? 'Saving...' : 'Save Changes'}
@@ -216,4 +216,4 @@ const Profile = () => {
   );
 };
 
-export default Profile; 
+export default Profile;

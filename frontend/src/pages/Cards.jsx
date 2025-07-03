@@ -128,8 +128,8 @@ function Cards() {
   }
 
   function handleShare(card) {
-    // Use the old digital-card link format for QR and sharing
-    const url = `${getNetworkUrl()}/digital-card?user=${profile.username}&type=digital-card&org=onfra&query=${card.id}`;
+    // Use the current IP/domain for QR and sharing
+    const url = `${window.location.origin}/digital-card?user=${profile.username}&type=digital-card&org=onfra&query=${card.id}`;
     setQrUrl(url);
     setQrModalOpen(true);
   }
@@ -202,194 +202,163 @@ function Cards() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-900 p-3 text-white">
-      <h1 className="my-5 !text-2xl font-semibold tracking-tight text-white sm:text-6xl"> My Cards </h1>
-      
+    <div className="min-h-screen bg-gray-50 p-8 font-sans">
+      <h2 className="text-3xl font-bold text-gray-800 mb-8 flex items-center gap-2">My Cards <span role='img' aria-label='card'>💳</span></h2>
       {error && (
-        <div className="bg-red-500 text-white p-4 rounded-lg mb-4">
+        <div className="bg-red-100 text-red-700 p-4 rounded-lg mb-4">
           <h2 className="text-lg font-bold">Error:</h2>
           <p>{error}</p>
         </div>
       )}
-      
       {loading && (
         <div className="text-center py-8">
-          <p className="text-xl">Loading cards...</p>
+          <p className="text-xl text-gray-500">Loading cards...</p>
         </div>
       )}
-      
       {!loading && cards.length === 0 && !error && (
         <div className="text-center py-8">
-          <p className="text-xl">No cards found. Create your first card!</p>
+          <p className="text-xl text-gray-500">No cards found. Create your first card!</p>
         </div>
       )}
-      
-      {qrModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-8 flex flex-col items-center relative">
-            <button onClick={() => setQrModalOpen(false)} className="absolute top-2 right-2 text-black text-2xl">&times;</button>
-            <h2 className="text-black text-xl font-bold mb-4">Share this card</h2>
-            <div id="qr-code-img" className="bg-white p-2 rounded">
-              <QRCodeSVG value={qrUrl} size={180} />
-            </div>
-            <button onClick={handleDownloadQR} className="mt-4 bg-gray-800 hover:bg-gray-900 text-white rounded px-4 py-2">Download QR</button>
-            <button onClick={handleCopyLink} className="mt-2 bg-blue-500 hover:bg-blue-700 text-white rounded px-4 py-2">{copied ? 'Copied!' : 'Copy Link'}</button>
-            {shareError && <div className="text-red-600 text-sm mt-2">{shareError}</div>}
-            <div className="mt-6 flex flex-col items-center">
-              <span className="text-black font-semibold mb-2">Share via</span>
-              <div className="flex gap-4">
-                <button
-                  title="Share the QR code link via WhatsApp"
-                  onClick={() => handleSharePlatform('whatsapp')}
-                  className="bg-green-500 hover:bg-green-600 text-white rounded-full p-3 text-xl"
-                >
-                  <FaWhatsapp />
-                </button>
-                <button
-                  title="Share the QR code link via Facebook"
-                  onClick={() => handleSharePlatform('facebook')}
-                  className="bg-blue-600 hover:bg-blue-700 text-white rounded-full p-3 text-xl"
-                >
-                  <FaFacebook />
-                </button>
-                <button
-                  title="Share the QR code link via Twitter"
-                  onClick={() => handleSharePlatform('twitter')}
-                  className="bg-blue-400 hover:bg-blue-500 text-white rounded-full p-3 text-xl"
-                >
-                  <FaTwitter />
-                </button>
-                <button
-                  title="Share the QR code link via LinkedIn"
-                  onClick={() => handleSharePlatform('linkedin')}
-                  className="bg-blue-800 hover:bg-blue-900 text-white rounded-full p-3 text-xl"
-                >
-                  <FaLinkedin />
-                </button>
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 justify-items-center">
+        {!loading && cards.map((card, index) => (
+          <div key={card.id || index} className="bg-white rounded-xl shadow p-6 flex flex-col items-center justify-between border border-gray-100 w-full max-w-xs min-h-[420px] transition-shadow hover:shadow-md">
+            <Link to={`/build/${card.id}`} className="w-full flex-1 flex flex-col items-center">
+              {/* Unified Card Preview */}
+              <div
+                className="w-full flex flex-col items-center rounded-lg shadow-inner overflow-hidden relative min-h-[320px] py-4"
+                style={{ backgroundColor: card.primaryBackgroundColor?.trim() ? card.primaryBackgroundColor : '#fff' }}
+              >
+                {/* Cover Photo */}
+                {card.coverPhoto && (card.coverPhoto.includes("/images") ? (
+                  <img src={"/api" + card.coverPhoto} alt="Cover" className="w-full h-32 object-cover" />
+                ) : (
+                  <img src={card.coverPhoto} alt="Cover" className="w-full h-32 object-cover" />
+                ))}
+                {/* Logo */}
+                {card.logo && (card.logo.includes("/images") ? (
+                  <img src={"/api" + card.logo} alt="Logo" className="w-16 h-16 object-contain rounded-lg mt-[-2rem] border-4 border-white shadow-md bg-white z-10" />
+                ) : (
+                  <img src={card.logo} alt="Logo" className="w-16 h-16 object-contain rounded-lg mt-[-2rem] border-4 border-white shadow-md bg-white z-10" />
+                ))}
+                {/* Profile Photo */}
+                {(card.profilePhoto && card.profilePhoto.startsWith('/uploads/profile_photos')) ? (
+                  <img
+                    src={"/api" + card.profilePhoto}
+                    alt="Profile"
+                    className="w-20 h-20 rounded-full object-cover border-4 border-green-500 shadow-lg mt-4 bg-white z-10"
+                  />
+                ) : card.profilePhoto ? (
+                  <img
+                    src={card.profilePhoto}
+                    alt="Profile"
+                    className="w-20 h-20 rounded-full object-cover border-4 border-green-500 shadow-lg mt-4 bg-white z-10"
+                  />
+                ) : (
+                  <img
+                    src={defaultAvatar}
+                    alt="Default"
+                    className="w-20 h-20 rounded-full object-cover border-4 border-green-500 shadow-lg mt-4 bg-white z-10"
+                  />
+                )}
+                {/* Card Info */}
+                <div className="flex flex-col items-center px-4 py-3 w-full">
+                  <h3 style={{ color: card.titleColor || '#111827' }} className="text-xl font-bold mt-2 text-center truncate w-full">
+                    {card.firstName || 'First'} {card.lastName || 'Last'}
+                  </h3>
+                  <p style={{ color: card.textColor || '#374151' }} className="text-base text-center w-full truncate">{card.jobTitle || 'Job Title'}</p>
+                  <p style={{ color: card.textColor || '#6b7280' }} className="text-sm text-center w-full truncate">{card.businessName || 'Business Name'}</p>
+                </div>
               </div>
-              <span className="text-xs text-gray-600 mt-2">These buttons share the QR code link. To share the image, download and upload it manually.</span>
-            </div>
+              {/* Card Actions */}
+              <div className="flex justify-between items-center w-full mt-4">
+                <div>
+                  <h1 className="text-lg font-semibold text-gray-800">{card.title || 'Untitled Card'}</h1>
+                  <div className="flex items-center gap-2 mt-2">
+                    <Switch
+                      onChange={() => handleToggleVisibility(card)}
+                      checked={!!card.config?.expose}
+                      checkedIcon={false}
+                      uncheckedIcon={false}
+                      onColor="#22c55e"
+                      offColor="#ef4444"
+                      height={20}
+                      width={40}
+                    />
+                    <span className={card.config?.expose ? 'text-green-500 ml-2' : 'text-red-500 ml-2'}>
+                      {card.config?.expose ? 'Visible' : 'Hidden'}
+                    </span>
+                  </div>
+                </div>
+                <div className="flex flex-row gap-2">
+                  <button
+                    type='button'
+                    onClick={(e) => { e.preventDefault(); handleShare(card); }}
+                    className="group relative inline-flex h-8 items-center justify-center overflow-hidden rounded-md border border-neutral-200 bg-transparent px-3 text-xs font-medium text-gray-700 hover:bg-gray-100 transition-all"
+                  >
+                    Share
+                  </button>
+                  <button
+                    type='button'
+                    onClick={(e) => { e.preventDefault(); deleteCard(card.id); }}
+                    className="group relative inline-flex h-8 items-center justify-center overflow-hidden rounded-md border border-red-500 bg-transparent px-3 text-xs font-medium text-red-500 hover:bg-red-50 transition-all"
+                  >
+                    Delete
+                  </button>
+                </div>
+              </div>
+            </Link>
           </div>
-        </div>
-      )}
-      
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-20 justify-items-center">
-        {!loading && cards.map((card, index) => {
-          console.log("Rendering card:", card);
-          if (!card) {
-            console.log("Card is null or undefined");
-            return null;
-          }
-          
-            return (
-            <div key={card.id || index} className="card w-full md:w-full lg:w-full h-[470px] border-2 border-gray-600 rounded-md flex flex-col items-center">
-              <Link to={`/build/${card.id}`} >
-                <div className="preview h-[80%] m-3 rounded-md transition-all overflow-hidden w-96">
-                    <div className="">
-                    <div style={{ backgroundColor: card.primaryBackgroundColor?.trim() ? card.primaryBackgroundColor : '#ffffff' }} className={`p-4 rounded-lg w-96 shadow-xl h-[80%] relative `}>
-                      {card.logo && card.logo.includes("/images") ?
-                          <img src={"/api" + card.logo} alt="Cover" className="p-4 w-24 absolute object-cover mb-4 rounded-lg" /> :
-                        card.logo ? <img src={card.logo} alt="Cover" className="p-4 w-24 absolute object-cover mb-4 rounded-lg" /> : null
-                        }
-                      {(!qrModalOpen && card.profilePhoto && card.profilePhoto.startsWith('/uploads/profile_photos')) ? (
-                        <img
-                          src={"/api" + card.profilePhoto}
-                          alt="Profile"
-                          className="w-28 h-28 shadow-2xl mt-2 z-50 absolute right-1/2 translate-x-1/2 top-[110px] mx-auto rounded-full mb-4 object-cover border-4 border-gray-700"
-                          style={{ aspectRatio: '1/1' }}
-                        />
-                      ) : (!qrModalOpen && card.profilePhoto) ? (
-                        <img
-                          src={card.profilePhoto}
-                          alt="Profile"
-                          className="w-28 h-28 shadow-2xl mt-2 z-50 absolute right-1/2 translate-x-1/2 top-[110px] mx-auto rounded-full mb-4 object-cover border-4 border-gray-700"
-                          style={{ aspectRatio: '1/1' }}
-                        />
-                      ) : (!qrModalOpen ? (
-                        <img
-                          src={defaultAvatar}
-                          alt="Default"
-                          className="w-28 h-28 shadow-2xl mt-2 z-50 absolute right-1/2 translate-x-1/2 top-[110px] mx-auto rounded-full mb-4 object-cover border-4 border-gray-700"
-                          style={{ aspectRatio: '1/1' }}
-                        />
-                      ) : null)}
-                      <div className="text-center">
-                        {card.coverPhoto && card.coverPhoto.includes("/images") ?
-                          <img src={"/api" + card.coverPhoto} alt="Cover" className="w-full h-40 object-cover mb-4 rounded-lg" /> :
-                          card.coverPhoto ? <img src={card.coverPhoto} alt="Cover" className="w-full h-40 object-cover mb-4 rounded-lg" /> : null
-                        }
-                        <div style={{ backgroundColor: card.secondaryBackgroundColor || '#f3f4f6' }} className="p-4 rounded-lg mb-4 shadow-xl">
-                          <h3 style={{ color: card.titleColor || '#000000' }} className="text-2xl font-bold mt-10">
-                            {card.firstName || 'First'} {card.lastName || 'Last'}
-                            </h3>
-                          <p style={{ color: card.textColor || '#000000' }} className="text-lg">{card.jobTitle || 'Job Title'}</p>
-                          <p style={{ color: card.textColor || '#000000' }} className="text-gray-400">{card.businessName || 'Business Name'}</p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <div className='flex justify-between items-center w-96 m-3'>
-                    <div>
-                    <h1 className='text-xl  font-semibold tracking-tight text-white'> {card.title || 'Untitled Card'} </h1>
-                    <div className='flex items-center gap-2 mt-2'>
-                      <Switch
-                        onChange={() => handleToggleVisibility(card)}
-                        checked={!!card.config?.expose}
-                        checkedIcon={false}
-                        uncheckedIcon={false}
-                        onColor="#22c55e"
-                        offColor="#ef4444"
-                        height={20}
-                        width={40}
-                      />
-                      <span className={card.config?.expose ? 'text-green-500 ml-2' : 'text-red-500 ml-2'}>
-                        {card.config?.expose ? 'Visible' : 'Hidden'}
-                      </span>
-                    </div>
-                  </div>
-                  <div className="flex flex-row gap-2">
-                    <button
-                      type='button'
-                      onClick={(e) => {
-                        e.preventDefault();
-                        handleShare(card);
-                      }}
-                      className="group relative inline-flex h-8 items-center justify-center overflow-hidden rounded-md border border-neutral-200 bg-transparent px-3 text-xs font-medium text-white transition-all active:translate-y-[2px] active:shadow-none"
-                    >
-                      Share
-                    </button>
-                    <button
-                      type='button'
-                      onClick={(e) => {
-                        e.preventDefault();
-                        deleteCard(card.id);
-                      }}
-                      className="group relative inline-flex h-8 items-center justify-center overflow-hidden rounded-md border border-red-500 bg-transparent px-3 text-xs font-medium text-red-500 transition-all active:translate-y-[2px] active:shadow-none"
-                    >
-                      Delete
-                    </button>
-                  </div>
-                </div>
-              </Link>
-            </div>
-          )
-        })}
+        ))}
         {/* Create New Card grid item */}
         {!loading && (
           <div
-            className="w-full md:w-full lg:w-full h-[470px] border-2 border-dashed border-blue-400 rounded-md flex flex-col items-center justify-center cursor-pointer hover:bg-blue-50 transition-all"
-            style={{ minWidth: '320px', minHeight: '400px' }}
+            className="bg-white rounded-lg border-2 border-dashed border-[#00C853] flex flex-col items-center justify-center cursor-pointer hover:bg-[#00C853] transition-all hover:scale-[1.02] shadow-md w-full max-w-xs min-h-[420px] group"
             onClick={() => navigate('/build/0')}
           >
-            <div className="flex flex-col items-center justify-center h-full w-full">
-              <FaPlus className="text-5xl text-blue-400 mb-4" />
-              <span className="text-xl font-semibold text-blue-500">Create New Card</span>
+            <div className="flex flex-col items-center justify-center h-full w-full py-8">
+              <FaPlus className="text-5xl text-[#00C853] mb-4 group-hover:text-white transition-colors" />
+              <span className="text-xl font-semibold text-[#00C853] group-hover:text-white transition-colors">Create New Card</span>
             </div>
           </div>
         )}
       </div>
       <ToastContainer />
+      {/* QR Code Modal */}
+      {qrModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-white rounded-xl shadow-lg p-8 flex flex-col items-center relative w-full max-w-xs">
+            <button
+              className="absolute top-2 right-2 text-gray-500 hover:text-gray-800 text-2xl"
+              onClick={() => setQrModalOpen(false)}
+              aria-label="Close"
+            >
+              &times;
+            </button>
+            <h3 className="text-lg font-bold mb-4">Share Card</h3>
+            <div id="qr-code-img" className="mb-4">
+              <QRCodeSVG value={qrUrl} size={180} />
+            </div>
+            <input
+              type="text"
+              value={qrUrl}
+              readOnly
+              className="w-full mb-2 p-2 border rounded text-xs text-gray-600 bg-gray-100"
+              onFocus={e => e.target.select()}
+            />
+            <div className="flex gap-2 mb-2">
+              <button onClick={handleCopyLink} className="px-3 py-1 bg-blue-500 text-white rounded text-xs">{copied ? 'Copied!' : 'Copy Link'}</button>
+              <button onClick={handleDownloadQR} className="px-3 py-1 bg-green-500 text-white rounded text-xs">Download QR</button>
+            </div>
+            <div className="flex gap-3 mt-2">
+              <button onClick={() => handleSharePlatform('whatsapp')} className="text-green-500 text-2xl" title="Share on WhatsApp"><FaWhatsapp /></button>
+              <button onClick={() => handleSharePlatform('facebook')} className="text-blue-600 text-2xl" title="Share on Facebook"><FaFacebook /></button>
+              <button onClick={() => handleSharePlatform('twitter')} className="text-blue-400 text-2xl" title="Share on Twitter"><FaTwitter /></button>
+              <button onClick={() => handleSharePlatform('linkedin')} className="text-blue-700 text-2xl" title="Share on LinkedIn"><FaLinkedin /></button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

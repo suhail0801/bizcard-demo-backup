@@ -1,8 +1,17 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import 'tailwindcss/tailwind.css';
+import { useNavigate } from 'react-router-dom';
 
 
 const LandingPage = () => {
+  const navigate = useNavigate();
+  useEffect(() => {
+    const token = localStorage.getItem('jwtToken');
+    if (token) {
+      navigate('/dashboard');
+    }
+  }, [navigate]);
+
   return (
     <div className="text-white h-[70vh]">
       {/* Hero Section */}

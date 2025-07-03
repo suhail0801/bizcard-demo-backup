@@ -13,6 +13,14 @@ const Login = () => {
     validateToken()
   }, []);
 
+  useEffect(() => {
+    // If user is already logged in, redirect to /dashboard
+    const storedToken = localStorage.getItem('jwtToken');
+    if (storedToken) {
+      navigate('/dashboard');
+    }
+  }, [navigate]);
+
   async function validateToken() {
 
     const url = `/api/validate`;
@@ -37,7 +45,7 @@ const Login = () => {
     } 
 
     if (response.status == 200) {
-      navigate("/cards");
+      navigate("/dashboard");
   }
     // const res = await response.json();
     // return res.auth
@@ -59,7 +67,7 @@ const Login = () => {
           if (res.data.token) {
             localStorage.setItem("jwtToken", res.data.token);
             axios.defaults.headers.common["Authorization"] = `Bearer ${res.data.token}`;
-            navigate("/cards");
+            navigate("/dashboard");
           } else {
             alert("Authentication failed. No token received.");
           }

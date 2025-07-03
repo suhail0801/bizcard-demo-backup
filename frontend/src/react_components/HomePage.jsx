@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import logo from './Card_Template/card1/visitdesk_logo-removebg-preview.png';
 // import card from './Card_Template/card1/card.jpeg';
@@ -185,7 +184,13 @@ const HomePage = () => {
         return cardPreview
     } 
     
-    
+    useEffect(() => {
+        // If user is already logged in, redirect to /dashboard
+        const storedToken = localStorage.getItem('jwtToken');
+        if (storedToken) {
+            navigate('/dashboard');
+        }
+    }, [navigate]);
 
     return (
         // <div className='flex flex-col bg-white h-[100vh] max-w-[100vw]'>

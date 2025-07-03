@@ -360,178 +360,94 @@ function App() {
 
 
     return (
-        <div className="min-h-screen bg-gray-900 p-8 text-white flex">
+        <div className="min-h-screen bg-gray-50 p-4 md:p-8 font-sans flex flex-col lg:flex-row gap-8">
             <ToastContainer />
-            <div className="max-w-lg mx-auto w-1/2">
-                <h2 className="text-3xl font-bold mb-4"> Details </h2>
-                <div className="mb-8 bg-gray-800 p-4 rounded-lg">
-                    <h2 className="text-xl font-bold mb-4">Header attachments</h2>
-                    <div className="mb-8 flex flex-row-reverse justify-between">
-                        <input
-                            type="file"
-                            name="logo"
-                            accept="image/*"
-                            onChange={handleFileChange}
-                            className="hidden"
-                            id="logo-upload"
-                        />
-                        <label
-                            htmlFor="logo-upload"
-                            className="group relative inline-flex h-10 items-center justify-center overflow-hidden rounded-lg border border-neutral-200 bg-transparent px-6 font-medium text-white transition-all [box-shadow:0px_4px_1px_#a3a3a3] active:translate-y-[2px] active:shadow-none"
-                        >
-                            + logo
-                        </label>
-                        {/* <button className="group relative inline-flex h-12 items-center justify-center overflow-hidden rounded-md border border-neutral-200 bg-transparent px-6 font-medium text-neutral-600 transition-all [box-shadow:0px_4px_1px_#a3a3a3] active:translate-y-[2px] active:shadow-none">Click me</button> */}
-                        <div>
-                            {errors.logo && <p className="text-red-500 mt-2">{errors.logo}</p>}
-                            <p className="mt-2 text-gray-400">suggested format: svg, jpeg, png or gif</p>
-                            {formData.logo.includes("/images") ?
-                                <img src={"/api" + formData.logo} alt="Cover" className="h-16 mt-2 rounded-lg" /> :
-                                <img src={formData.logo} alt="Cover" className="h-16 mt-2 rounded-lg" />
-                            }
+            <div className="w-full lg:w-1/2 max-w-2xl mx-auto bg-white rounded-2xl shadow-xl p-6 md:p-10 border border-gray-100 flex flex-col gap-8">
+                <h2 className="text-3xl font-extrabold mb-4 text-gray-900 tracking-tight">Create Digital Card</h2>
+                {/* Header Attachments */}
+                <section className="mb-4 bg-white p-6 rounded-2xl shadow border border-gray-100 flex flex-col gap-4">
+                    <h2 className="text-xl font-bold mb-2 text-gray-900">Header Attachments</h2>
+                    <div className="flex flex-col md:flex-row gap-6 items-center justify-between">
+                        <div className="flex flex-col items-center gap-2 w-full md:w-1/2">
+                            <input type="file" name="logo" accept="image/*" onChange={handleFileChange} className="hidden" id="logo-upload" />
+                            <label htmlFor="logo-upload" className="group cursor-pointer inline-flex h-10 items-center justify-center rounded-lg border border-green-200 bg-green-50 px-6 font-medium text-green-700 transition-all shadow hover:bg-green-100">
+                                + Logo
+                            </label>
+                            {errors.logo && <p className="text-red-500 text-xs mt-1">{errors.logo}</p>}
+                            <p className="text-xs text-gray-400">svg, jpeg, png, gif</p>
+                            <div className="mt-2">
+                                {formData.logo.includes("/images") ?
+                                    <img src={"/api" + formData.logo} alt="Logo" className="h-16 rounded-lg object-contain bg-white border" /> :
+                                    <img src={formData.logo} alt="Logo" className="h-16 rounded-lg object-contain bg-white border" />
+                                }
+                            </div>
+                        </div>
+                        <div className="flex flex-col items-center gap-2 w-full md:w-1/2">
+                            <input type="file" name="coverPhoto" accept="image/*" onChange={handleFileChange} className="hidden" id="cover-upload" />
+                            <label htmlFor="cover-upload" className="group cursor-pointer inline-flex h-10 items-center justify-center rounded-lg border border-green-200 bg-green-50 px-6 font-medium text-green-700 transition-all shadow hover:bg-green-100">
+                                + Cover Photo
+                            </label>
+                            {errors.coverPhoto && <p className="text-red-500 text-xs mt-1">{errors.coverPhoto}</p>}
+                            <p className="text-xs text-gray-400">svg, jpeg, png, gif</p>
+                            <p className="text-xs text-gray-400">960x640px, 3:2</p>
+                            <img src={formData.coverPhoto.includes("/images") ? "/api" + formData.coverPhoto : formData.coverPhoto} alt="Cover" className="w-full h-40 object-cover mt-2 rounded-lg border" style={{ aspectRatio: '3/2' }} />
                         </div>
                     </div>
-                    <div className="mb-4 flex flex-row-reverse justify-between">
-                        <input
-                            type="file"
-                            name="coverPhoto"
-                            accept="image/*"
-                            onChange={handleFileChange}
-                            className="hidden"
-                            id="cover-upload"
-                        />
-                        <label
-                            style={{ width: "40%" }}
-                            htmlFor="cover-upload"
-                            className="group relative inline-flex h-10 items-center justify-center overflow-hidden rounded-lg border border-neutral-200 bg-transparent px-6 font-medium text-white transition-all [box-shadow:0px_4px_1px_#a3a3a3] active:translate-y-[2px] active:shadow-none"
-                        >
-                            + Cover Photo
-                        </label>
-                        <div className='w-1/2'>
-                            {errors.coverPhoto && <p className="text-red-500 mt-2">{errors.coverPhoto}</p>}
-                            <p className="mt-2 text-gray-400">suggested format: svg, jpeg, png or gif</p>
-                            <p className="mt-2 text-gray-400">Recommended cover photo size is 960 x 640 pixels, with an aspect ratio of 3:2</p>
-                            <img src={formData.coverPhoto.includes("/images") ? "/api" + formData.coverPhoto : formData.coverPhoto} alt="Cover" className="w-full h-40 object-cover mb-4 rounded-lg" style={{ aspectRatio: '3/2' }} />
-                        </div>
-                    </div>
-                </div>
-                <div>
-                    <div className='bg-gray-800  p-4 rounded-lg'>
-                        <h2 className="text-xl font-bold mb-4">Personal information</h2>
-                        <div className="mb-4 flex flex-row-reverse justify-between">
-                            <input
-                                type="file"
-                                name="profilePhoto"
-                                accept="image/*"
-                                onChange={handleFileChange}
-                                className="hidden"
-                                id="profile-upload"
-                            />
-                            <label
-                                htmlFor="profile-upload"
-                                className="group relative inline-flex h-10 items-center justify-center overflow-hidden rounded-lg border border-neutral-200 bg-transparent px-6 font-medium text-white transition-all [box-shadow:0px_4px_1px_#a3a3a3] active:translate-y-[2px] active:shadow-none"
-                            >
+                </section>
+                {/* Personal Info */}
+                <section className="bg-white p-6 rounded-2xl shadow border border-gray-100 flex flex-col gap-4">
+                    <h2 className="text-xl font-bold mb-2 text-gray-900">Personal Information</h2>
+                    <div className="flex flex-col md:flex-row gap-6 items-center justify-between">
+                        <div className="flex flex-col items-center gap-2 w-full md:w-1/2">
+                            <input type="file" name="profilePhoto" accept="image/*" onChange={handleFileChange} className="hidden" id="profile-upload" />
+                            <label htmlFor="profile-upload" className="group cursor-pointer inline-flex h-10 items-center justify-center rounded-lg border border-green-200 bg-green-50 px-6 font-medium text-green-700 transition-all shadow hover:bg-green-100">
                                 + Profile Photo
                             </label>
-                            <div className='w-1/2'>
-                                {errors.profilePhoto && <p className="text-red-500 mt-2">{errors.profilePhoto}</p>}
-                                <p className="mt-2 text-gray-400">suggested format: jpeg, png or gif</p>
-                                <p className="mt-2 text-gray-400">Recommended profile photo size is 320 x 320 pixels, with an aspect ratio of 1:1</p>
-                                {formData.profilePhoto ? (
-                                    <img
-                                        src={formData.profilePhoto.includes("/images") ? "/api" + formData.profilePhoto : formData.profilePhoto}
-                                        alt="Profile"
-                                        className="w-16 h-16 mt-2 rounded-full object-cover border-2 border-gray-700"
-                                        style={{ aspectRatio: '1/1' }}
-                                    />
-                                ) : (
-                                    <img
-                                        src={defaultAvatar}
-                                        alt="Default"
-                                        className="w-16 h-16 mt-2 rounded-full object-cover border-2 border-gray-700"
-                                        style={{ aspectRatio: '1/1' }}
-                                    />
-                                )}
+                            {errors.profilePhoto && <p className="text-red-500 text-xs mt-1">{errors.profilePhoto}</p>}
+                            <p className="text-xs text-gray-400">jpeg, png, gif</p>
+                            <p className="text-xs text-gray-400">320x320px, 1:1</p>
+                            {formData.profilePhoto ? (
+                                <img src={formData.profilePhoto.includes("/images") ? "/api" + formData.profilePhoto : formData.profilePhoto} alt="Profile" className="w-16 h-16 mt-2 rounded-full object-cover border-2 border-green-200 bg-white" style={{ aspectRatio: '1/1' }} />
+                            ) : (
+                                <img src={defaultAvatar} alt="Default" className="w-16 h-16 mt-2 rounded-full object-cover border-2 border-green-200 bg-white" style={{ aspectRatio: '1/1' }} />
+                            )}
+                        </div>
+                        {/* Theme Colors */}
+                        <div className="flex flex-col gap-4 w-full md:w-1/2">
+                            <div>
+                                <label htmlFor="primaryBackgroundColor" className="block text-gray-700 text-sm font-bold mb-1">Primary Background</label>
+                                <input type="color" id="primaryBackgroundColor" name="primaryBackgroundColor" value={formData.primaryBackgroundColor} onChange={handleChange} className="h-12 w-full rounded-lg border border-gray-200 bg-white" />
+                            </div>
+                            <div>
+                                <label htmlFor="secondaryBackgroundColor" className="block text-gray-700 text-sm font-bold mb-1">Secondary Background</label>
+                                <input type="color" id="secondaryBackgroundColor" name="secondaryBackgroundColor" value={formData.secondaryBackgroundColor} onChange={handleChange} className="h-12 w-full rounded-lg border border-gray-200 bg-white" />
+                            </div>
+                            <div>
+                                <label htmlFor="titleColor" className="block text-gray-700 text-sm font-bold mb-1">Primary Text</label>
+                                <input type="color" id="titleColor" name="titleColor" value={formData.titleColor} onChange={handleChange} className="h-12 w-full rounded-lg border border-gray-200 bg-white" />
+                            </div>
+                            <div>
+                                <label htmlFor="textColor" className="block text-gray-700 text-sm font-bold mb-1">Secondary Text</label>
+                                <input type="color" id="textColor" name="textColor" value={formData.textColor} onChange={handleChange} className="h-12 w-full rounded-lg border border-gray-200 bg-white" />
                             </div>
                         </div>
                     </div>
-                    <div className='my-4 bg-gray-800  p-4 rounded-lg'>
-                        <h2 className="text-xl font-bold mb-4"> Theme </h2>
-                        <div className="mb-4">
-                            <label for="color" className="block text-white text-sm font-bold mb-2">Select Primary Background Color</label>
-                            <input
-                                type="color"
-                                id="color"
-                                className="h-20 form-control block w-full px-3 py-1.5 text-base font-normal text-gray-700 bg-white bg-clip-padding border border-solid border-gray-300 rounded transition ease-in-out m-0 focus:text-gray-700 focus:bg-white "
-                                name="primaryBackgroundColor"
-                                value={formData.primaryBackgroundColor}
-                                onChange={handleChange}
-                            // className="appearance-none bg-none border-0 cursor-pointer h-20 w-60 rounded-xl"
-                            />
-                        </div>
-                        <div className="mb-4">
-                            <label for="color" className="block text-white text-sm font-bold mb-2">Select Secondary Background Color</label>
-                            <input
-                                type="color"
-                                id="color"
-                                className="h-20 form-control block w-full px-3 py-1.5 text-base font-normal text-gray-700 bg-white bg-clip-padding border border-solid border-gray-300 rounded transition ease-in-out m-0 focus:text-gray-700 focus:bg-white "
-                                name="secondaryBackgroundColor"
-                                value={formData.secondaryBackgroundColor}
-                                onChange={handleChange}
-                            // className="appearance-none bg-none border-0 cursor-pointer h-20 w-60 rounded-xl"
-                            />
-                        </div>
-                        <div className="mb-4">
-                            <label for="color" className="block text-white text-sm font-bold mb-2">Select Primary Text Color</label>
-                            <input
-                                type="color"
-                                id="color"
-                                className="h-20 form-control block w-full px-3 py-1.5 text-base font-normal text-gray-700 bg-white bg-clip-padding border border-solid border-gray-300 rounded transition ease-in-out m-0 focus:text-gray-700 focus:bg-white "
-                                name="titleColor"
-                                value={formData.titleColor}
-                                onChange={handleChange}
-                            // className="appearance-none bg-none border-0 cursor-pointer h-20 w-60 rounded-xl"
-                            />
-                        </div>
-                        <div className="mb-4">
-                            <label for="color" className="block text-white text-sm font-bold mb-2">Select Secondary Text Color</label>
-                            <input
-                                type="color"
-                                id="color"
-                                className="h-20 form-control block w-full px-3 py-1.5 text-base font-normal text-gray-700 bg-white bg-clip-padding border border-solid border-gray-300 rounded transition ease-in-out m-0 focus:text-gray-700 focus:bg-white "
-                                name="textColor"
-                                value={formData.textColor}
-                                onChange={handleChange}
-                            // className="appearance-none bg-none border-0 cursor-pointer h-20 w-60 rounded-xl"
-                            />
-                        </div>
-
-                    </div>
-                    <form onSubmit={handleSubmit}>
-                        <div className='mt-8 bg-gray-800 p-4 rounded-lg'>
-                            <h2 className="text-xl font-bold mb-4">Contact information</h2>
-                            <div className="mb-4">
-                                <label className="block text-gray-400 mb-2">First name</label>
-                                <input
-                                    type="text"
-                                    name="firstName"
-                                    value={formData.firstName}
-                                    onChange={handleChange}
-                                    className="w-full p-3  rounded-lg text-gray-300 bg-black"
-                                />
+                </section>
+                {/* Form */}
+                <form onSubmit={handleSubmit} className="flex flex-col gap-8">
+                    <section className="bg-white p-6 rounded-2xl shadow border border-gray-100 flex flex-col gap-4">
+                        <h2 className="text-xl font-bold mb-2 text-gray-900">Contact Information</h2>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label className="block text-gray-700 mb-1 font-medium">First Name</label>
+                                <input type="text" name="firstName" value={formData.firstName} onChange={handleChange} className="w-full p-3 rounded-lg text-gray-900 bg-white border border-gray-200 focus:ring-2 focus:ring-green-200 outline-none" />
                             </div>
-                            <div className="mb-4">
-                                <label className="block text-gray-400 mb-2">Last name</label>
-                                <input
-                                    type="text"
-                                    name="lastName"
-                                    value={formData.lastName}
-                                    onChange={handleChange}
-                                    className="w-full text-gray-300 bg-black p-3  rounded-lg "
-                                />
+                            <div>
+                                <label className="block text-gray-700 mb-1 font-medium">Last Name</label>
+                                <input type="text" name="lastName" value={formData.lastName} onChange={handleChange} className="w-full p-3 rounded-lg text-gray-900 bg-white border border-gray-200 focus:ring-2 focus:ring-green-200 outline-none" />
                             </div>
-                            <div className="mb-4">
-                                <label className="block text-gray-400 mb-2"> Mobile </label>
+                            <div className="md:col-span-2">
+                                <label className="block text-gray-700 mb-1 font-medium">Mobile</label>
                                 <PhoneInput
                                     country={'in'}
                                     value={formData.mobile}
@@ -548,294 +464,149 @@ function App() {
                                         name: 'mobile',
                                         required: true,
                                         autoFocus: false,
-                                        className: 'w-full p-3 rounded-lg bg-white text-black border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none',
+                                        className: 'w-full p-3 rounded-lg bg-white text-black border border-gray-200 focus:border-green-500 focus:ring-2 focus:ring-green-200 outline-none',
                                     }}
                                     containerClass="w-full"
                                     inputClass="w-full bg-white text-black p-3 rounded-lg"
-                                    buttonClass="bg-white text-black border-r border-gray-300"
+                                    buttonClass="bg-white text-black border-r border-gray-200"
                                     dropdownStyle={{ zIndex: 1000 }}
                                 />
-                                <div className="text-xs text-gray-500 mt-1">Enter your phone number with country code.</div>
+                                <div className="text-xs text-gray-400 mt-1">Enter your phone number with country code.</div>
                                 {phoneError && <div className="text-xs text-red-500 mt-1">{phoneError}</div>}
                                 <div className="mt-2 text-gray-400">{formatPhone(formData.mobile)}</div>
                             </div>
-                            <div className="mb-4">
-                                <label className="block text-gray-400 mb-2"> Email </label>
-                                <input
-                                    type="text"
-                                    name="email"
-                                    value={formData.email}
-                                    onChange={handleChange}
-                                    className="w-full text-gray-300 bg-black  p-3  rounded-lg"
-                                />
+                            <div>
+                                <label className="block text-gray-700 mb-1 font-medium">Email</label>
+                                <input type="text" name="email" value={formData.email} onChange={handleChange} className="w-full p-3 rounded-lg text-gray-900 bg-white border border-gray-200 focus:ring-2 focus:ring-green-200 outline-none" />
                             </div>
-                            <div className="mb-4">
-                                <label className="block text-gray-400 mb-2">Job title</label>
-                                <input
-                                    type="text"
-                                    name="jobTitle"
-                                    value={formData.jobTitle}
-                                    onChange={handleChange}
-                                    className="w-full text-gray-300 bg-black p-3  rounded-lg"
-                                />
+                            <div>
+                                <label className="block text-gray-700 mb-1 font-medium">Job Title</label>
+                                <input type="text" name="jobTitle" value={formData.jobTitle} onChange={handleChange} className="w-full p-3 rounded-lg text-gray-900 bg-white border border-gray-200 focus:ring-2 focus:ring-green-200 outline-none" />
                             </div>
-                            <div className="mb-4">
-                                <label className="block text-gray-400 mb-2">Business name</label>
-                                <input
-                                    type="text"
-                                    name="businessName"
-                                    value={formData.businessName}
-                                    onChange={handleChange}
-                                    className="w-full text-gray-300 bg-black p-3  rounded-lg"
-                                />
+                            <div className="md:col-span-2">
+                                <label className="block text-gray-700 mb-1 font-medium">Business Name</label>
+                                <input type="text" name="businessName" value={formData.businessName} onChange={handleChange} className="w-full p-3 rounded-lg text-gray-900 bg-white border border-gray-200 focus:ring-2 focus:ring-green-200 outline-none" />
                             </div>
                         </div>
-                        <div className='mt-8 bg-gray-800 p-4 rounded-lg'>
-                            <h2 className="text-xl font-bold mb-4">Card Title(for reference, wont be shown to others)</h2>
-                            <div className="mb-4">
-                                <label className="block text-gray-400 mb-2"> Title </label>
-                                <input
-                                    type="text"
-                                    name="title"
-                                    value={formData.title}
-                                    onChange={handleChange}
-                                    className="w-full p-3  rounded-lg text-gray-300 bg-black"
-                                />
-                            </div>
-
-                        </div>
-                        <div className="mb-4 p-4 bg-gray-800 rounded-lg mt-8">
-                            <h2 className="text-xl font-bold mb-4"> Primary Connections </h2>
-                            {/* <h3 className="block text-gray-400 mb-2"></h3> */}
-                            {formData.primaryActions.map((socialLink, index) => (
-                                <div key={index} className="flex items-center space-x-2 my-4 p-2 rounded-lg">
-                                    <div style={{ backgroundColor: socialLink.color }} className={` w-20 h-10 rounded-lg flex items-center justify-center cursor-pointer`}>
-                                        <IconHandler platform={socialLink.platform} />
-                                    </div>
-                                    <input
-                                        type="text"
-                                        name="url"
-                                        placeholder={socialLink.placeholder}
-                                        value={socialLink.url}
-                                        onChange={(e) => handleSocialLinkChange(e, index, 'primary')}
-                                        className="w-full p-2 bg-white text-black rounded"
-                                    />
-                                    <div onClick={() => removePlatform(index, 'primary')} className='w-20 h-10 bg-red-500 rounded-lg flex items-center justify-center cursor-pointer group transition-colors hover:bg-red-700'>
-                                        <FaTrash className='group-hover:-translate-y-0.5 group-hover:-rotate-12 transition-all' />
-                                    </div>
+                    </section>
+                    <section className="bg-white p-6 rounded-2xl shadow border border-gray-100 flex flex-col gap-4">
+                        <h2 className="text-xl font-bold mb-2 text-gray-900">Card Title (for reference)</h2>
+                        <input type="text" name="title" value={formData.title} onChange={handleChange} className="w-full p-3 rounded-lg text-gray-900 bg-white border border-gray-200 focus:ring-2 focus:ring-green-200 outline-none" />
+                    </section>
+                    {/* Primary Connections */}
+                    <section className="p-6 bg-white rounded-2xl shadow border border-gray-100 flex flex-col gap-4">
+                        <h2 className="text-xl font-bold mb-2 text-gray-900">Primary Connections</h2>
+                        {formData.primaryActions.map((socialLink, index) => (
+                            <div key={index} className="flex items-center gap-2 my-2 p-2 rounded-lg bg-gray-50 border border-gray-100">
+                                <div style={{ backgroundColor: socialLink.color }} className="w-12 h-10 rounded-lg flex items-center justify-center">
+                                    <IconHandler platform={socialLink.platform} />
                                 </div>
-                            ))}
-                            <div className="flex mt-2 flex-wrap">
-                                {actions.map((action, index) => (
-                                    <div
-                                        key={index}
-                                        className="m-3 w-10 h-10 rounded-lg flex items-center justify-center cursor-pointer"
-                                        style={{ backgroundColor: action.color }}
-                                        onClick={() => handleAddSocialLink({ ...action, type: 'primary' })}
-                                    >
-                                        <IconHandler platform={action.platform} />
-                                    </div>
-                                ))}
+                                <input type="text" name="url" placeholder={socialLink.placeholder} value={socialLink.url} onChange={(e) => handleSocialLinkChange(e, index, 'primary')} className="w-full p-2 bg-white text-black rounded-lg border border-gray-200" />
+                                <button type="button" onClick={() => removePlatform(index, 'primary')} className="w-10 h-10 bg-red-500 rounded-lg flex items-center justify-center group transition-colors hover:bg-red-700">
+                                    <FaTrash className="text-white group-hover:-translate-y-0.5 group-hover:-rotate-12 transition-all" />
+                                </button>
                             </div>
+                        ))}
+                        <div className="flex flex-wrap gap-2 mt-2">
+                            {actions.map((action, index) => (
+                                <button type="button" key={index} className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: action.color }} onClick={() => handleAddSocialLink({ ...action, type: 'primary' })}>
+                                    <IconHandler platform={action.platform} />
+                                </button>
+                            ))}
                         </div>
-                        <div className="mb-4 p-4 bg-gray-800 rounded-lg mt-8">
-                            <h2 className="text-xl font-bold mb-4"> Secondary Connections </h2>
-                            {/* <h3 className="block text-gray-400 mb-2"></h3> */}
-                            {formData.secondaryActions.map((socialLink, index) => (
-                                <div key={index} className="flex  items-center space-x-2 my-4">
-                                    <div style={{ backgroundColor: socialLink.color }} className='w-20 h-10  rounded-lg flex items-center justify-center cursor-pointer'>
-                                        <IconHandler platform={socialLink.platform} />
-                                    </div>
-                                    <input
-                                        type="text"
-                                        name="url"
-                                        placeholder={socialLink.placeholder}
-                                        value={socialLink.url}
-                                        onChange={(e) => handleSocialLinkChange(e, index, 'secondary')}
-                                        className="w-full p-2 bg-white rounded text-black"
-                                    />
-                                    <div onClick={() => removePlatform(index, 'secondary')} className='w-20 h-10 bg-red-500 rounded-lg flex items-center justify-center cursor-pointer group transition-colors hover:bg-red-700'>
-                                        <FaTrash className='group-hover:-translate-y-0.5 group-hover:-rotate-12 transition-all' />
-                                    </div>
+                    </section>
+                    {/* Secondary Connections */}
+                    <section className="p-6 bg-white rounded-2xl shadow border border-gray-100 flex flex-col gap-4">
+                        <h2 className="text-xl font-bold mb-2 text-gray-900">Secondary Connections</h2>
+                        {formData.secondaryActions.map((socialLink, index) => (
+                            <div key={index} className="flex items-center gap-2 my-2 p-2 rounded-lg bg-gray-50 border border-gray-100">
+                                <div style={{ backgroundColor: socialLink.color }} className="w-12 h-10 rounded-lg flex items-center justify-center">
+                                    <IconHandler platform={socialLink.platform} />
                                 </div>
-                            ))}
-                            <div className="flex mt-2 flex-wrap">
-                                {additionalActions.map((action, index) => (
-                                    <div
-                                        key={index}
-                                        className="m-3 w-10 h-10 rounded-lg flex items-center justify-center cursor-pointer"
-                                        style={{ backgroundColor: action.color }}
-                                        onClick={() => handleAddSocialLink({ ...action, type: "secondary" })}
-                                    >
-                                        <IconHandler platform={action.platform} />
-                                    </div>
-                                ))}
+                                <input type="text" name="url" placeholder={socialLink.placeholder} value={socialLink.url} onChange={(e) => handleSocialLinkChange(e, index, 'secondary')} className="w-full p-2 bg-white text-black rounded-lg border border-gray-200" />
+                                <button type="button" onClick={() => removePlatform(index, 'secondary')} className="w-10 h-10 bg-red-500 rounded-lg flex items-center justify-center group transition-colors hover:bg-red-700">
+                                    <FaTrash className="text-white group-hover:-translate-y-0.5 group-hover:-rotate-12 transition-all" />
+                                </button>
                             </div>
+                        ))}
+                        <div className="flex flex-wrap gap-2 mt-2">
+                            {additionalActions.map((action, index) => (
+                                <button type="button" key={index} className="w-10 h-10 rounded-lg flex items-center justify-center" style={{ backgroundColor: action.color }} onClick={() => handleAddSocialLink({ ...action, type: 'secondary' })}>
+                                    <IconHandler platform={action.platform} />
+                                </button>
+                            ))}
                         </div>
-                        <div className="mb-4 p-4 bg-gray-800 rounded-lg mt-8">
-                            <h2 className="text-xl font-bold mb-4">Featured Content</h2>
-                            {featuredContent.map((item, index) => (
-                                <div key={index} className="mb-4  bg-gray-700 p-2 rounded-lg">
-                                    <div className="flex justify-between my-5">
-                                        <select
-                                            value={item.type}
-                                            onChange={(e) => handleFeaturedContentChange(index, 'type', e.target.value)}
-                                            className="w-1/3 p-3  rounded-lg text-gray-300 bg-black"
-                                        >
-                                            <option value="">Select type</option>
-                                            {/* <option value="media">Media</option> */}
-                                            <option value="product">Product</option>
-                                            <option value="text">Text</option>
-                                            <option value="embed">Embed</option>
-                                        </select>
-                                        {/* <button
-                                            onClick={() => handleRemoveFeaturedContent(index)}
-                                            className="bg-red-500 text-white p-2 rounded"
-                                        >
-                                            Remove
-                                        </button> */}
-                                        <div onClick={() => handleRemoveFeaturedContent(index)} className='w-20 h-10 bg-red-500 rounded-lg flex items-center justify-center cursor-pointer group transition-colors hover:bg-red-700'>
-                                            <FaTrash className='group-hover:-translate-y-0.5 group-hover:-rotate-12 transition-all' />
-                                        </div>
+                    </section>
+                    {/* Featured Content */}
+                    <section className="p-6 bg-white rounded-2xl shadow border border-gray-100 flex flex-col gap-4">
+                        <h2 className="text-xl font-bold mb-2 text-gray-900">Featured Content</h2>
+                        {featuredContent.map((item, index) => (
+                            <div key={index} className="mb-4 bg-gray-50 p-4 rounded-lg flex flex-col gap-2 border border-gray-100">
+                                <div className="flex justify-between items-center gap-2">
+                                    <select value={item.type} onChange={(e) => handleFeaturedContentChange(index, 'type', e.target.value)} className="w-1/3 p-2 rounded-lg text-gray-900 bg-white border border-gray-200">
+                                        <option value="">Select type</option>
+                                        <option value="product">Product</option>
+                                        <option value="text">Text</option>
+                                        <option value="embed">Embed</option>
+                                    </select>
+                                    <button type="button" onClick={() => handleRemoveFeaturedContent(index)} className="w-10 h-10 bg-red-500 rounded-lg flex items-center justify-center group transition-colors hover:bg-red-700">
+                                        <FaTrash className="text-white group-hover:-translate-y-0.5 group-hover:-rotate-12 transition-all" />
+                                    </button>
+                                </div>
+                                {item.type === 'media' && (
+                                    <div>
+                                        <input type="file" accept="video/*" onChange={(e) => handleVideoChange(e, index)} className="hidden" id={`media-upload-${index}`} />
+                                        <label htmlFor={`media-upload-${index}`} className="group cursor-pointer inline-flex h-10 items-center justify-center rounded-lg border border-green-200 bg-green-50 px-6 font-medium text-green-700 transition-all shadow hover:bg-green-100">
+                                            + Add Video
+                                        </label>
                                     </div>
-                                    {item.type === 'media' && (
-                                        <div className="mb-4">
-                                            <input
-                                                type="file"
-                                                accept="video/*"
-                                                onChange={(e) => handleVideoChange(e, index)}
-                                                className="hidden"
-                                                id={`media-upload-${index}`}
-                                            />
-                                            <label
-                                                htmlFor={`media-upload-${index}`}
-                                                className="group relative inline-flex h-10 items-center justify-center overflow-hidden rounded-lg border border-neutral-200 bg-transparent px-6 font-medium text-white transition-all [box-shadow:0px_4px_1px_#a3a3a3] active:translate-y-[2px] active:shadow-none"
-                                            >
-                                                + Add Video
+                                )}
+                                {item.type === 'product' && (
+                                    <div className="flex flex-col gap-2">
+                                        <div className="flex items-center gap-2">
+                                            <input type="file" accept="image/*" onChange={(e) => handleProductImageChange(e, index)} className="hidden" id={`product-image-upload-${index}`} />
+                                            <label htmlFor={`product-image-upload-${index}`} className={`w-10 h-10 group cursor-pointer inline-flex items-center justify-center rounded-lg border bg-green-50 text-green-700 transition-all ${item.image ? 'bg-cover bg-center' : ''}`} style={item.image ? { backgroundImage: `url(/api${item.image})` } : {}}>
+                                                {!item.image && <FaImage />}
                                             </label>
-                                            {/* {item.content && <img src={item.content} alt="Media preview" className="mt-2 rounded-lg" />} */}
+                                            <input type="text" placeholder="Product title" value={item.title || ''} onChange={(e) => handleFeaturedContentChange(index, 'title', e.target.value)} className="w-full p-2 rounded-lg text-gray-900 bg-white border border-gray-200" />
                                         </div>
-                                    )}
-                                    {item.type === 'product' && (
-                                        <div className="mb-4">
-                                            <div className="title flex">
-                                                <input
-                                                    type="file"
-                                                    accept="image/*"
-                                                    onChange={(e) => handleProductImageChange(e, index)}
-                                                    className="hidden"
-                                                    id={`product-image-upload-${index}`}
-                                                />
-                                                <label
-                                                    htmlFor={`product-image-upload-${index}`}
-                                                    className={`w-[10%] mx-2 group relative inline-flex items-center justify-center overflow-hidden rounded-lg border bg-transparent px-3 text-white transition-all ${item.image ? 'bg-cover bg-center' : ''}`}
-                                                    style={item.image ? { backgroundImage: `url(/api${item.image})` } : {}}
-                                                >
-                                                    {!item.image && <FaImage />}
-                                                </label>
-
-                                                {/* {item.image && <img src={item.image} alt="Product preview" className="mt-2 rounded-lg" />} */}
-                                                <input
-                                                    type="text"
-                                                    placeholder="Product title"
-                                                    value={item.title || ''}
-                                                    onChange={(e) => handleFeaturedContentChange(index, 'title', e.target.value)}
-                                                    className="w-[90%] p-3  rounded-lg text-gray-300 bg-black"
-                                                />
-                                            </div>
-                                            <input
-                                                type="text"
-                                                placeholder="Product description"
-                                                value={item.description || ''}
-                                                onChange={(e) => handleFeaturedContentChange(index, 'description', e.target.value)}
-                                                className="p-3  rounded-lg text-gray-300 bg-black w-[100%] mt-3"
-                                            />
-                                            <input
-                                                type="text"
-                                                placeholder="Product price"
-                                                value={item.price || ''}
-                                                onChange={(e) => handleFeaturedContentChange(index, 'price', e.target.value)}
-                                                className="p-3  rounded-lg text-gray-300 bg-black w-[100%] mt-3"
-                                            />
-                                            <input
-                                                type="text"
-                                                placeholder="Button text"
-                                                value={item.buttonText || ''}
-                                                onChange={(e) => handleFeaturedContentChange(index, 'buttonText', e.target.value)}
-                                                className="p-3  rounded-lg text-gray-300 bg-black w-[100%] mt-3"
-                                            />
-                                            <input
-                                                type="text"
-                                                placeholder="Button Redirect"
-                                                value={item.link || ''}
-                                                onChange={(e) => handleFeaturedContentChange(index, 'link', e.target.value)}
-                                                className="p-3  rounded-lg text-gray-300 bg-black w-[100%] mt-3"
-                                            />
-                                        </div>
-                                    )}
-                                    {item.type === 'text' && (
-                                        <textarea
-                                            placeholder="Text content"
-                                            value={item.content}
-                                            onChange={(e) => handleFeaturedContentChange(index, 'content', e.target.value)}
-                                            className="p-3  rounded-lg text-gray-300 bg-black w-[100%] mt-3"
-                                        ></textarea>
-                                    )}
-                                    {item.type === 'embed' && (
-                                        <div className="mb-4">
-                                            <input
-                                                type="text"
-                                                placeholder="Embed link"
-                                                value={item.content}
-                                                onChange={(e) => handleFeaturedContentChange(index, 'content', e.target.value)}
-                                                className="p-3 rounded-lg text-gray-300 bg-black w-[100%] mt-3"
-                                            />
-                                        </div>
-                                    )}
-
-                                </div>
-                            ))}
-                            <button
-                                type='button'
-                                onClick={handleAddFeaturedContent}
-                                className="group relative inline-flex h-10 items-center justify-center overflow-hidden rounded-lg border border-neutral-200 bg-transparent px-6 font-medium text-white transition-all [box-shadow:0px_4px_1px_#a3a3a3] active:translate-y-[2px] active:shadow-none mt-2"
-                            >
-                                Add Featured Content
-                            </button>
-                        </div>
-                        <div className='flex justify-end items-center'>
-                            <button type="submit" className="bg-green-500 hover:bg-green-400 text-white font-bold py-2 px-4 rounded-xl">
-                                Save Card
-                            </button>
-                        </div>
-
-                    </form>
-                </div>
+                                        <input type="text" placeholder="Product description" value={item.description || ''} onChange={(e) => handleFeaturedContentChange(index, 'description', e.target.value)} className="p-2 rounded-lg text-gray-900 bg-white border border-gray-200" />
+                                        <input type="text" placeholder="Product price" value={item.price || ''} onChange={(e) => handleFeaturedContentChange(index, 'price', e.target.value)} className="p-2 rounded-lg text-gray-900 bg-white border border-gray-200" />
+                                        <input type="text" placeholder="Button text" value={item.buttonText || ''} onChange={(e) => handleFeaturedContentChange(index, 'buttonText', e.target.value)} className="p-2 rounded-lg text-gray-900 bg-white border border-gray-200" />
+                                        <input type="text" placeholder="Button Redirect" value={item.link || ''} onChange={(e) => handleFeaturedContentChange(index, 'link', e.target.value)} className="p-2 rounded-lg text-gray-900 bg-white border border-gray-200" />
+                                    </div>
+                                )}
+                                {item.type === 'text' && (
+                                    <textarea placeholder="Text content" value={item.content} onChange={(e) => handleFeaturedContentChange(index, 'content', e.target.value)} className="p-2 rounded-lg text-gray-900 bg-white border border-gray-200 w-full" />
+                                )}
+                                {item.type === 'embed' && (
+                                    <input type="text" placeholder="Embed link" value={item.content} onChange={(e) => handleFeaturedContentChange(index, 'content', e.target.value)} className="p-2 rounded-lg text-gray-900 bg-white border border-gray-200 w-full" />
+                                )}
+                            </div>
+                        ))}
+                        <button type="button" onClick={handleAddFeaturedContent} className="group inline-flex h-10 items-center justify-center rounded-lg border border-green-200 bg-green-50 px-6 font-medium text-green-700 transition-all shadow hover:bg-green-100 mt-2">
+                            Add Featured Content
+                        </button>
+                    </section>
+                    <div className="flex justify-end items-center mt-4">
+                        <button type="submit" className="bg-green-600 hover:bg-green-500 text-white font-bold py-3 px-8 rounded-xl shadow-lg transition-all text-lg">
+                            Save Card
+                        </button>
+                    </div>
+                </form>
             </div>
-            <div className="max-w-md mx-auto w-1/2 p-4 rounded-lg relative">
-                <div
-                    style={{ backgroundColor: formData.primaryBackgroundColor, top: '2rem', bottom: '2rem' }}
-                    className={`p-4 rounded-lg sticky top-8 w-96 shadow-xl max-h-[80vh] overflow-y-auto`}
-                >
-                    <h2 className="text-lg font-bold mb-4 text-center">LIVE PREVIEW</h2>
+            {/* Live Preview */}
+            <div className="w-full lg:w-1/2 max-w-md mx-auto p-4 rounded-2xl bg-white shadow-xl border border-gray-100 flex flex-col items-center">
+                <div style={{ backgroundColor: formData.primaryBackgroundColor, top: '2rem', bottom: '2rem' }} className="p-4 rounded-2xl sticky top-8 w-full shadow-xl max-h-[80vh] overflow-y-auto">
+                    <h2 className="text-lg font-bold mb-4 text-center text-gray-800">LIVE PREVIEW</h2>
                     {formData.logo.includes("/images") ?
-                        <img src={"/api" + formData.logo} alt="Cover" className="p-4 absolute w-24 object-cover mb-4 rounded-lg" /> :
-                        <img src={formData.logo} alt="Cover" className="p-4 absolute w-24 object-cover mb-4 rounded-lg" />
+                        <img src={"/api" + formData.logo} alt="Logo" className="p-4 absolute w-24 object-contain mb-4 rounded-lg" /> :
+                        <img src={formData.logo} alt="Logo" className="p-4 absolute w-24 object-contain mb-4 rounded-lg" />
                     }
                     {formData.profilePhoto ? (
-                        <img
-                            src={formData.profilePhoto.includes("/images") ? "/api" + formData.profilePhoto : formData.profilePhoto}
-                            alt="Profile"
-                            className="w-28 h-28 shadow-2xl mt-2 z-50 absolute right-1/2 translate-x-1/2 top-[160px] mx-auto rounded-full mb-4 object-cover border-4 border-gray-700"
-                            style={{ aspectRatio: '1/1' }}
-                        />
+                        <img src={formData.profilePhoto.includes("/images") ? "/api" + formData.profilePhoto : formData.profilePhoto} alt="Profile" className="w-28 h-28 shadow-2xl mt-2 z-50 absolute right-1/2 translate-x-1/2 top-[160px] mx-auto rounded-full mb-4 object-cover border-4 border-green-200 bg-white" style={{ aspectRatio: '1/1' }} />
                     ) : (
-                        <img
-                            src={defaultAvatar}
-                            alt="Default"
-                            className="w-28 h-28 shadow-2xl mt-2 z-50 absolute right-1/2 translate-x-1/2 top-[160px] mx-auto rounded-full mb-4 object-cover border-4 border-gray-700"
-                            style={{ aspectRatio: '1/1' }}
-                        />
+                        <img src={defaultAvatar} alt="Default" className="w-28 h-28 shadow-2xl mt-2 z-50 absolute right-1/2 translate-x-1/2 top-[160px] mx-auto rounded-full mb-4 object-cover border-4 border-green-200 bg-white" style={{ aspectRatio: '1/1' }} />
                     )}
                     {formData.coverPhoto.includes("/images") ?
                         <img src={"/api" + formData.coverPhoto} alt="Cover" className="w-full h-40 object-cover mb-4 rounded-lg" style={{ aspectRatio: '3/2' }} /> :
@@ -843,18 +614,14 @@ function App() {
                     }
                     <div className="text-center">
                         <div style={{ backgroundColor: formData.secondaryBackgroundColor }} className="p-4 rounded-lg mb-4 shadow-xl">
-
-                            <h3 style={{ color: formData.titleColor }} className="text-2xl font-bold mt-10">
-                                {formData.firstName} {formData.lastName}
-                            </h3>
-                            {/* <p style={{ color: formData.textColor }} className="text-gray-400">({formData.pronouns})</p> */}
+                            <h3 style={{ color: formData.titleColor }} className="text-2xl font-bold mt-10">{formData.firstName} {formData.lastName}</h3>
                             <p style={{ color: formData.textColor }} className="text-lg">{formData.jobTitle}</p>
                             <p style={{ color: formData.textColor }} className="text-gray-400">{formData.businessName}</p>
                         </div>
                         {formData.primaryActions.length ? (
-                            <div style={{ backgroundColor: formData.secondaryBackgroundColor }} className='rounded-lg p-4 my-4 shadow-xl'>
-                                <h2 style={{ color: formData.titleColor }} className="text-lg font-bold mb-4 text-center"> Primary Platforms</h2>
-                                <div className="flex justify-center ">
+                            <div style={{ backgroundColor: formData.secondaryBackgroundColor }} className="rounded-lg p-4 my-4 shadow-xl">
+                                <h2 style={{ color: formData.titleColor }} className="text-lg font-bold mb-4 text-center">Primary Platforms</h2>
+                                <div className="flex justify-center">
                                     <div className="grid grid-cols-5 gap-4">
                                         {formData.primaryActions.map(({ platform, url, color }) => (
                                             <a key={platform} href={url} target="_blank" rel="noopener noreferrer" className="flex justify-center items-center text-white p-4 rounded-full" style={{ background: color }}>
@@ -864,11 +631,10 @@ function App() {
                                     </div>
                                 </div>
                             </div>
-                        ) : ""}
+                        ) : null}
                         {formData.secondaryActions.length ? (
-                            <div style={{ backgroundColor: formData.secondaryBackgroundColor }} className='rounded-lg p-4 my-4 shadow-xl'>
-                                <h2 style={{ color: formData.titleColor }} className="text-lg font-bold mb-4 text-center"> Also Active in </h2>
-
+                            <div style={{ backgroundColor: formData.secondaryBackgroundColor }} className="rounded-lg p-4 my-4 shadow-xl">
+                                <h2 style={{ color: formData.titleColor }} className="text-lg font-bold mb-4 text-center">Also Active in</h2>
                                 <div className="flex justify-center items-center">
                                     <div className="grid grid-cols-5 gap-4">
                                         {formData.secondaryActions.map(({ platform, url, color }) => (
@@ -879,7 +645,7 @@ function App() {
                                     </div>
                                 </div>
                             </div>
-                        ) : ""}
+                        ) : null}
                         <div className="mt-8">
                             {featuredContent.map((item, index) => (
                                 <div key={index} className="mb-4">
@@ -891,25 +657,19 @@ function App() {
                                             <p style={{ color: formData.textColor }} className="text-gray-400">{item.description}</p>
                                             <p style={{ color: formData.textColor }} className="text-lg">{item.price}</p>
                                             {item.buttonText && (
-                                                <button style={{ background: formData.primaryBackgroundColor }} className="p-2 rounded-lg mt-2">
-                                                    <a href={item.link} target='__blank' > {item.buttonText} </a>
+                                                <button style={{ background: formData.primaryBackgroundColor }} className="p-2 rounded-lg mt-2 text-white font-semibold">
+                                                    <a href={item.link} target="__blank">{item.buttonText}</a>
                                                 </button>
                                             )}
                                         </div>
                                     )}
-                                    {item.type === 'text' && <p style={{ backgroundColor: formData.secondaryBackgroundColor, color: formData.textColor }} className="text-white w-full p-4 rounded-lg shadow-xl ">{item.content}</p>}
+                                    {item.type === 'text' && <p style={{ backgroundColor: formData.secondaryBackgroundColor, color: formData.textColor }} className="text-white w-full p-4 rounded-lg shadow-xl">{item.content}</p>}
                                     {item.type === 'embed' && item.content && (
-                                        <div
-                                            className="embed-wrapper w-full bg-gray-700  rounded-lg shadow-xl"
-                                            dangerouslySetInnerHTML={{ __html: item.content }}
-                                        />
+                                        <div className="embed-wrapper w-full bg-gray-100 rounded-lg shadow-xl" dangerouslySetInnerHTML={{ __html: item.content }} />
                                     )}
                                 </div>
                             ))}
                         </div>
-
-
-
                     </div>
                 </div>
             </div>
@@ -963,7 +723,6 @@ const additionalActions = [
     { platform: 'Yelp', prefix: 'https://www.yelp.com/user_details?userid=', placeholder: 'username', color: '#D32323' },
     { platform: 'YouTube', prefix: 'https://www.youtube.com/c/', placeholder: 'username', color: '#FF0000' }
 ];
-
 
 
 const IconHandler = ({ platform }) => {

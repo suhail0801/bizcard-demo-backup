@@ -12,7 +12,7 @@ const navItems = [
 const Sidebar = () => {
   const location = useLocation();
   return (
-    <aside className="w-64 bg-white border-r flex flex-col py-8 px-4 min-h-screen">
+    <aside className="w-64 bg-white border-r flex flex-col py-8 px-4 h-screen overflow-y-auto sticky top-0 z-30">
       <nav className="flex flex-col gap-2 mt-4">
         {navItems.map(({ to, icon, label }) => (
           <Link

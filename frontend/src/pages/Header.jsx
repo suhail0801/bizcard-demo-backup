@@ -60,48 +60,28 @@ const Header = () => {
     return (
         <div className='text-white'>
             {!window.location.href.includes("digital-card") ?
-                <header className='h-[10vh] bg-white shadow-xl flex justify-between items-center px-4 m-3 rounded-lg'>
+                <header className='h-[10vh] bg-white shadow-md flex justify-between items-center px-4 rounded-none relative'>
                     <img src="https://onfra.io/wp-content/uploads/2024/05/onfra-logo.png" alt="Logo" className="h-12" />
+                    <div className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 pointer-events-none select-none">
+                        <span className="font-extrabold" style={{ fontSize: '3.5rem', color: '#1db954', letterSpacing: '0.2em' }}>BIZCARD</span>
+                    </div>
                     <div className='text-black z-50 w-1/3 flex justify-around'>
+                        {/* Visually hide the Create link, but keep it in the DOM for logic/routing. */}
                         <Link
-                            className={`links p-2 homepage rounded-md flex items-center  transition-all ${isActive('/') ? 'active' : ''}`}
-                            to="/">
-                            Homepage
-                        </Link>
-                        <Link
-                            className={`links  p-2 cards rounded-md flex items-center  transition-all ${isActive('/cards') ? 'active' : ''}`}
-                            to="/cards">
-                            {/* Cards */}
-                            My Cards
-                        </Link>
-                        <Link
-                            className={`links  p-2 contacts rounded-md flex items-center  transition-all ${isActive('/contacts') ? 'active' : ''}`}
-                            to="/contacts">
-                            My Contacts
-                        </Link>
-                        <Link
-                            className={`links  p-2 create rounded-md flex items-center  transition-all ${location.pathname.includes('/build') ? 'active' : ''}`}
-                            to="/build/0">
+                            className={`links p-2 create rounded-md flex items-center transition-all ${location.pathname.includes('/build') ? 'active' : ''}`}
+                            to="/build/0"
+                            style={{ display: 'none' }}
+                        >
                             Create
-                        </Link>
-                        <Link
-                            className={`links  p-2 about rounded-md flex items-center  transition-all`}
-                            to="https://onfra.io/"
-                            target='_blank'>
-                            About
                         </Link>
                     </div>
                     <div className="flex items-center gap-4">
-                        {isLoggedIn && (
-                            <span className="mr-2 text-gray-700 font-semibold">
-                                Welcome, {profile.username || profile.fullName || profile.email}!
-                            </span>
-                        )}
+                        {/* Username display removed from header. */}
                         {isLoggedIn && (
                             <img
                                 src={profile.profilePhoto && profile.profilePhoto.startsWith('/uploads/profile_photos') ? profile.profilePhoto : (profile.profilePhoto || defaultAvatar)}
                                 alt="Profile"
-                                className="w-10 h-10 rounded-full object-cover border-2 border-gray-400 cursor-pointer hover:border-blue-500 transition"
+                                className="w-10 h-10 rounded-full object-cover border-2 border-gray-400 cursor-pointer hover:border-[#00C853] transition"
                                 onClick={() => navigate('/profile')}
                                 title="My Profile"
                             />
