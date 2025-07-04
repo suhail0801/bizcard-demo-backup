@@ -45,6 +45,7 @@
     "react-router-dom": "^6.21.2",
     "react-switch": "^7.1.0",
     "react-to-print": "^2.14.15",
+    "recharts": "^3.0.2",
     "tailwind-merge": "^2.2.0",
     "tailwindcss-animate": "^1.0.7",
     "tailwindcss-gradients": "^3.0.0",
