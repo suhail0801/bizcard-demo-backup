@@ -335,7 +335,7 @@ function Cards() {
 
   return (
     <div className="min-h-screen bg-gray-50 p-8 font-sans">
-      <h2 className="text-3xl font-bold text-gray-800 mb-8 flex items-center gap-2">My Cards <span role='img' aria-label='card'>💳</span></h2>
+      <h2 className="text-3xl font-bold text-gray-800 mb-8">My Cards</h2>
       {error && (
         <div className="bg-red-100 text-red-700 p-4 rounded-lg mb-4">
           <h2 className="text-lg font-bold">Error:</h2>

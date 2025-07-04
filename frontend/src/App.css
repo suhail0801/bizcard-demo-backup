@@ -127,3 +127,28 @@ body {
   background: rgb(34 197 94 / 1);
   color: #fff;
 }
+
+.onfra-brand {
+  color: #28c76f;
+  font-weight: 600;
+  margin-left: 4px;
+}
+
+.footer-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  width: 100%;
+  padding: 20px;
+}
+.footer-left {
+  text-align: left;
+}
+.footer-right {
+  text-align: right;
+}
+.onfra {
+  color: #28c76f;
+  font-weight: 600;
+  margin-left: 4px;
+}

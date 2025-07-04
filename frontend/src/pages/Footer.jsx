@@ -2,20 +2,26 @@
 import React from 'react';
 
 const Footer = () => {
-    return (
-        <div>
-            < footer className="bg-gray-800 py-6 h-[10%] mt-10 m-3 rounded-lg" >
-                <div className="container mx-auto px-4 text-center text-gray-400">
-                    <p>&copy; 2024 Digital Business Card Generator. All rights reserved.</p>
-                    <div className="mt-4">
-                        <a href="#" className="mx-2 text-gray-400 hover:text-white">Contact</a>
-                        <a href="#" className="mx-2 text-gray-400 hover:text-white">Privacy</a>
-                        <a href="#" className="mx-2 text-gray-400 hover:text-white">Terms</a>
-                    </div>
-                </div>
-            </footer >
+  return (
+    <footer className="footer w-full bg-gray-50 border-t border-gray-200 text-sm fixed bottom-0 left-0 z-30">
+      <div className="footer-content w-full">
+        <div className="footer-left text-gray-600">
+          Powered by <span className="onfra">Onfra</span>
         </div>
-    );
+        <div className="footer-right flex flex-wrap gap-x-4 gap-y-1 text-gray-500 justify-center md:justify-end">
+          <a href="#" className="hover:text-green-700 transition-colors">Your Country</a>
+          <span className="hidden md:inline">|</span>
+          <a href="#" className="hover:text-green-700 transition-colors">Privacy Policy</a>
+          <span className="hidden md:inline">|</span>
+          <a href="#" className="hover:text-green-700 transition-colors">Terms &amp; Conditions</a>
+          <span className="hidden md:inline">|</span>
+          <a href="#" className="hover:text-green-700 transition-colors">Cancellation and Refund Policy</a>
+          <span className="hidden md:inline">|</span>
+          <a href="#" className="hover:text-green-700 transition-colors">GDPR Policy</a>
+        </div>
+      </div>
+    </footer>
+  );
 };
 
 export default Footer;
