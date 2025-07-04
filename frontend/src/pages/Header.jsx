@@ -60,7 +60,7 @@ const Header = () => {
     return (
         <div className='text-white'>
             {!window.location.href.includes("digital-card") ?
-                <header className='h-[10vh] bg-white shadow-md flex justify-between items-center px-4 rounded-none relative'>
+                <header className='h-[10vh] bg-white shadow-md flex justify-between items-center px-4 rounded-none relative z-50'>
                     <img src="https://onfra.io/wp-content/uploads/2024/05/onfra-logo.png" alt="Logo" className="h-12" />
                     <div className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 pointer-events-none select-none">
                         <span className="font-extrabold" style={{ fontSize: '3.5rem', color: '#1db954', letterSpacing: '0.2em' }}>BIZCARD</span>
