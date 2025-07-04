@@ -1,7 +1,7 @@
 // App.js
 import React from 'react';
 import { useState } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AuthProvider, useAuth } from './AuthContext';
 import Login from "./react_components/login/Login";
 import HomePage from './react_components/HomePage';
@@ -62,34 +62,46 @@ const ProtectedRoute = ({ element }) => {
 //   );
 // };
 
+function AppRoutes() {
+  const location = useLocation();
+  const isBizcardMinimal =
+    location.pathname.startsWith('/page/') ||
+    location.pathname.startsWith('/digital-card');
+  return (
+    <>
+      {!isBizcardMinimal && <Header />}
+      <Routes>
+        <Route path="/" element={<Landingpage />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/signup" element={<Signup />} />
+
+        {/* Dashboard layout with persistent sidebar for protected routes */}
+        <Route element={<ProtectedRoute element={<DashboardLayout />} />}>
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/cards" element={<Cards />} />
+          <Route path="/contacts" element={<MyContacts />} />
+          <Route path="/create" element={<Build />} />
+          <Route path="/build/:id" element={<Build />} />
+          <Route path="/digital-card/" element={<DigitalCard />} />
+          <Route path="/Display" element={<Display />} />
+          <Route path="/home" element={<HomePage />} />
+          <Route path="/be/:templateId" element={<UserSavedCard />} />
+          <Route path="/mycards" element={<UserSavedCardList />} />
+          <Route path="/mycard/:cardId" element={<UserSavedCard />} />
+          <Route path="/profile" element={<Profile />} />
+          <Route path="/page/:customUrl" element={<DigitalCard />} />
+        </Route>
+      </Routes>
+      {!isBizcardMinimal && <Footer />}
+    </>
+  );
+}
+
 function App() {
-  // const [templateData, setTemplateData] = useState([])
   return (
     <AuthProvider>
       <Router>
-        <Header />
-        <Routes>
-          <Route path="/" element={<Landingpage />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/signup" element={<Signup />} />
-
-          {/* Dashboard layout with persistent sidebar for protected routes */}
-          <Route element={<ProtectedRoute element={<DashboardLayout />} />}>
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/cards" element={<Cards />} />
-            <Route path="/contacts" element={<MyContacts />} />
-            <Route path="/create" element={<Build />} />
-            <Route path="/build/:id" element={<Build />} />
-            <Route path="/digital-card/" element={<DigitalCard />} />
-            <Route path="/Display" element={<Display />} />
-            <Route path="/home" element={<HomePage />} />
-            <Route path="/be/:templateId" element={<UserSavedCard />} />
-            <Route path="/mycards" element={<UserSavedCardList />} />
-            <Route path="/mycard/:cardId" element={<UserSavedCard />} />
-            <Route path="/profile" element={<Profile />} />
-          </Route>
-        </Routes>
-        <Footer />
+        <AppRoutes />
       </Router>
     </AuthProvider>
   );

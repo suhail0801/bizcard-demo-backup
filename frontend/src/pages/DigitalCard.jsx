@@ -12,6 +12,13 @@ import BizCardAuthModal from './BizCardAuthModal';
 import ProfileAvatar from '../react_components/ProfileAvatar';
 import ProfileEditModal from '../react_components/ProfileEditModal';
 import { parsePhoneNumberFromString } from 'libphonenumber-js';
+import UnifiedCardPreview from '../components/UnifiedCardPreview';
+import LiveCardPreview from '../components/LiveCardPreview';
+import PDFCardSinglePage from '../components/PDFCardSinglePage';
+import html2canvas from 'html2canvas';
+import jsPDF from 'jspdf';
+import { useRef } from 'react';
+import { useReactToPrint } from 'react-to-print';
 
 function App() {
 
@@ -27,8 +34,10 @@ function App() {
 
     const navigate = useNavigate();
     const location = useLocation();
+    const params = useParams();
     const queryParams = new URLSearchParams(location.search);
     const encryptedQuery = queryParams.get('query');
+    const customUrlParam = params.customUrl;
 
     const [showLoginModal, setShowLoginModal] = useState(false);
     const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -43,13 +52,17 @@ function App() {
     useEffect(() => {
         setLoading(true);
         setError(null);
-        getCard();
+        if (customUrlParam) {
+            getCardByCustomUrl(customUrlParam);
+        } else {
+            getCard();
+        }
         // DO NOT check for any existing JWT or user session here
         setIsAuthenticated(false);
         setUserProfile(null);
         setContacts([]);
         setJwtToken(null);
-    }, []);
+    }, [customUrlParam]);
 
     const [formData, setFormData] = useState(null); // No defaults, only set after fetch
     const [featuredContent, setFeaturedContent] = useState([]);
@@ -185,6 +198,31 @@ function App() {
         }
     }
 
+    async function getCardByCustomUrl(customUrl) {
+        try {
+            const url = `/api/publiccard?custom_url=${encodeURIComponent(customUrl.toLowerCase())}`;
+            const response = await fetch(url, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            });
+            if (!response.ok) {
+                setError('No card found for this custom URL.');
+                setLoading(false);
+                return;
+            }
+            const res = await response.json();
+            setFormData(res);
+            setConfig(res.config ? res.config : config)
+            setFeaturedContent(res.featuredContent ? res.featuredContent : [])
+            setLoading(false);
+        } catch (err) {
+            setError('No card found for this custom URL.');
+            setLoading(false);
+        }
+    }
+
     // Called after modal login/signup is successful
     async function handleLoginSuccess(token, profile) {
         setJwtToken(token);
@@ -214,7 +252,9 @@ function App() {
                 const data = await res.json();
                 setContacts(data);
             }
-        } catch {}
+        } catch (err) {
+            toast.error('Failed to load or update contact/card. Please try again.', { position: 'top-center' });
+        }
     }
 
     // Only allow add/share after login
@@ -232,6 +272,13 @@ function App() {
 
     // Add edit profile button logic
     const isCardOwner = isAuthenticated && userProfile && formData && userProfile.email === formData.email;
+
+    const printRef = useRef();
+    const handlePrint = useReactToPrint({
+      content: () => printRef.current,
+      documentTitle: (formData?.firstName ? formData.firstName : 'user') + '_bizcard',
+      removeAfterPrint: true,
+    });
 
     if (loading) {
         return (
@@ -267,9 +314,9 @@ function App() {
                         <span className="text-white font-semibold text-sm">{userProfile.username || userProfile.email}</span>
                         <button onClick={handleLogout} className="ml-2 text-red-400 hover:text-red-600" title="Logout">
                             <FaSignOutAlt size={18} />
-                            </button>
-                        </div>
-                                    </div>
+                        </button>
+                    </div>
+                </div>
             )}
             {/* Business Card Header */}
             <h1 className="text-2xl md:text-3xl font-extrabold text-white text-center mb-6 tracking-wide">Business Card</h1>
@@ -277,8 +324,24 @@ function App() {
             <div className="max-w-7xl mx-auto flex flex-col lg:flex-row gap-8">
                 {/* Business Card Container */}
                 <div className="flex-1 flex flex-col items-center">
-                    {formData && (
-                        <BusinessCardPreview card={formData} />
+                    {isAuthenticated && userProfile ? (
+                        <LiveCardPreview
+                            formData={{
+                                ...formData,
+                                mobiles: (Array.isArray(formData?.mobiles) && formData.mobiles.length > 0)
+                                    ? formData.mobiles.map(mobile => {
+                                        const phone = parsePhoneNumberFromString(mobile, 'IN');
+                                        return phone ? phone.formatInternational() : mobile;
+                                    })
+                                    : [],
+                                emails: formData?.emails || [],
+                            }}
+                            featuredContent={featuredContent}
+                            IconHandler={IconHandler}
+                            generateURL={generateURL}
+                        />
+                    ) : (
+                        formData && <UnifiedCardPreview card={formData} />
                     )}
                     {/* Buttons below the card */}
                     <div className="flex flex-col md:flex-row gap-4 w-full max-w-md mx-auto mt-2">
@@ -294,8 +357,19 @@ function App() {
                         >
                             Share My Contact
                         </button>
-                                </div>
-                            </div>
+                    </div>
+                    {/* Download Card Button */}
+                    {isAuthenticated && (
+                      <div className="w-full max-w-md mx-auto mt-2">
+                        <button
+                          className="w-full bg-indigo-700 hover:bg-indigo-800 text-white font-bold py-3 rounded-lg shadow-lg transition-all text-lg"
+                          onClick={handlePrint}
+                        >
+                          Download Card
+                        </button>
+                      </div>
+                    )}
+                </div>
                 {/* Contacts Section - Only show after login and not card owner */}
                 {isAuthenticated && userProfile && userProfile.email !== formData.email && (
                     <div className="flex-1">
@@ -342,6 +416,21 @@ function App() {
             {showProfileEdit && (
                 <ProfileEditModal isOpen={showProfileEdit} onClose={() => setShowProfileEdit(false)} userProfile={userProfile} onUpdate={setUserProfile} jwtToken={jwtToken} />
             )}
+            {/* Printable card for react-to-print (hidden from view, always rendered) */}
+            <div style={{ position: 'absolute', left: '-9999px', top: 0, width: '900px', background: '#fff', zIndex: -1, padding: 24 }} aria-hidden="true">
+              <div ref={printRef}>
+                {formData && (
+                  <PDFCardSinglePage
+                    formData={formData}
+                    featuredContent={featuredContent}
+                    IconHandler={IconHandler}
+                    generateURL={generateURL}
+                    showQr={true}
+                    qrUrl={window.location.href}
+                  />
+                )}
+              </div>
+            </div>
         </div>
     );
 }
@@ -494,38 +583,5 @@ const IconHandler = ({ platform }) => {
             return null;
     }
 };
-
-function BusinessCardPreview({ card }) {
-    return (
-        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md mx-auto p-0 overflow-hidden relative my-4">
-            <div className="w-full h-32 md:h-40 bg-gray-200 relative">
-                {card.coverPhoto && (
-                    <img
-                        src={card.coverPhoto}
-                        alt="Cover"
-                        className="w-full h-full object-cover"
-                    />
-                )}
-                {card.profilePhoto && (
-                    <div className="absolute left-1/2 -bottom-12 transform -translate-x-1/2 z-20">
-                        <img
-                            src={card.profilePhoto.startsWith('/uploads') ? '/api' + card.profilePhoto : card.profilePhoto}
-                            alt="Profile"
-                            className="w-24 h-24 md:w-28 md:h-28 rounded-full border-4 border-white shadow-lg object-cover bg-gray-100"
-                        />
-                    </div>
-                )}
-            </div>
-            <div className="pt-16 pb-8 px-6 flex flex-col items-center text-center">
-                {card.title && <div className="uppercase tracking-widest text-sm text-gray-700 font-bold mb-3">{card.title}</div>}
-                {(card.firstName || card.lastName) && (
-                    <div className="text-2xl md:text-3xl font-extrabold text-gray-900 mb-1">{card.firstName} {card.lastName}</div>
-                )}
-                {card.jobTitle && <div className="text-lg text-gray-600 font-medium mb-1">{card.jobTitle}</div>}
-                {card.businessName && <div className="text-base text-gray-400 mb-4">{card.businessName}</div>}
-            </div>
-        </div>
-    );
-}
 
 export default App;

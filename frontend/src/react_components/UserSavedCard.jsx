@@ -33,6 +33,7 @@ import { useParams } from "react-router-dom";
 import axios from "axios";
 import Navbar from "./Project_Components/Navbar";
 import { parsePhoneNumberFromString } from 'libphonenumber-js';
+import { toast } from "react-toastify";
 
 const fillCardVariables = async (cardPreview, cardVariables, dontFillImages) => {
   cardPreview = cardPreview.toString();
@@ -488,6 +489,7 @@ const UserSavedCard = () => {
       .catch((error) => {
         // Handle errors during the request
         console.error("Error adding data:", error);
+        toast.error('Failed to save card. Please try again.');
         // You can add further error handling or user feedback here
       });
   };

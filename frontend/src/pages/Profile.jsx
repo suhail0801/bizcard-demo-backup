@@ -41,7 +41,10 @@ const Profile = () => {
         setProfile(data);
         setLoading(false);
       })
-      .catch(() => setLoading(false));
+      .catch(() => {
+        setLoading(false);
+        toast.error('Failed to update profile. Please try again.');
+      });
   }, []);
 
   const handleChange = (e) => {
@@ -163,6 +166,7 @@ const Profile = () => {
               setProfile(prev => ({ ...prev, mobile: value }));
               if (!isValidPhoneNumber(value)) {
                 setPhoneError('Please enter a valid phone number.');
+                toast.error('Please enter a valid phone number.');
               } else {
                 setPhoneError('');
               }

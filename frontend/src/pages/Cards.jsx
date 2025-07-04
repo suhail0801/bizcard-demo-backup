@@ -1,12 +1,19 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useRef } from 'react'
 import { toast, ToastContainer } from 'react-toastify';
 import "react-toastify/dist/ReactToastify.css";
 import { Link, useNavigate } from 'react-router-dom';
 import { QRCodeSVG } from 'qrcode.react';
-import { FaWhatsapp, FaFacebook, FaTwitter, FaLinkedin, FaPlus } from 'react-icons/fa';
+import {
+  FaWhatsapp, FaFacebook, FaTwitter, FaLinkedin, FaPlus, FaPhone, FaDribbble, FaGithub, FaInstagram, FaPatreon, FaPaypal, FaPinterest, FaSnapchat, FaSoundcloud, FaSpotify, FaTiktok, FaTumblr, FaTwitch, FaTwitter as FaTwitterIcon, FaVimeo, FaYoutube, FaGlobe, FaSignal, FaTelegram, FaSkype, FaViber, FaWeixin, FaArtstation, FaQuora, FaReddit
+} from 'react-icons/fa';
+import { RiHomeLine, RiMessengerLine } from 'react-icons/ri';
+import { SiXmpp, SiBuymeacoffee, SiCashapp, SiCodeberg, SiDiaspora, SiMedium, SiOpencollective, SiPeertube, SiThreads, SiVk, SiYelp } from 'react-icons/si';
 import html2canvas from 'html2canvas';
 import Switch from "react-switch";
 import defaultAvatar from '../assets/default-avatar.jpg';
+import { useReactToPrint } from 'react-to-print';
+import LiveCardPreview from '../components/LiveCardPreview';
+import PDFCardSinglePage from '../components/PDFCardSinglePage';
 
 const key = 123; // The encryption/decryption key
 const QR_BASE_URL = window.location.origin;
@@ -23,6 +30,98 @@ function getNetworkUrl(path = "") {
   return `${protocol}//${networkIp}${port}${path}`;
 }
 
+// Move IconHandler to the top of the file
+const IconHandler = ({ platform }) => {
+    switch (platform) {
+        case 'Office':
+            return <FaPhone />;
+        case 'Home':
+            return <RiHomeLine />;
+        case 'SMS':
+            return <FaSms />;
+        case 'Website':
+            return <FaGlobe />;
+        case 'Signal':
+            return <FaSignal />;
+        case 'Telegram':
+            return <FaTelegram />;
+        case 'WhatsApp':
+            return <FaWhatsapp />;
+        case 'Messenger':
+            return <RiMessengerLine />;
+        case 'Skype':
+            return <FaSkype />;
+        case 'Viber':
+            return <FaViber />;
+        case 'WeChat':
+            return <FaWeixin />;
+        case 'XMPP':
+            return <SiXmpp />;
+        case 'LinkedIn':
+            return <FaLinkedin />;
+        case 'ArtStation':
+            return <FaArtstation />;
+        case 'Buy me a coffee':
+            return <SiBuymeacoffee />;
+        case 'Cash App':
+            return <SiCashapp />;
+        case 'Codeberg':
+            return <SiCodeberg />;
+        case 'Diaspora':
+            return <SiDiaspora />;
+        case 'Dribbble':
+            return <FaDribbble />;
+        case 'Facebook':
+            return <FaFacebook />;
+        case 'GitHub':
+            return <FaGithub />;
+        case 'Instagram':
+            return <FaInstagram />;
+        case 'Medium':
+            return <SiMedium />;
+        case 'Open-Collective':
+            return <SiOpencollective />;
+        case 'Patreon':
+            return <FaPatreon />;
+        case 'PayPal':
+            return <FaPaypal />;
+        case 'Peertube':
+            return <SiPeertube />;
+        case 'Pinterest':
+            return <FaPinterest />;
+        case 'Quora':
+            return <FaQuora />;
+        case 'Reddit':
+            return <FaReddit />;
+        case 'Snapchat':
+            return <FaSnapchat />;
+        case 'Soundcloud':
+            return <FaSoundcloud />;
+        case 'Spotify':
+            return <FaSpotify />;
+        case 'Threads':
+            return <SiThreads />;
+        case 'TikTok':
+            return <FaTiktok />;
+        case 'Tumblr':
+            return <FaTumblr />;
+        case 'Twitch':
+            return <FaTwitch />;
+        case 'Twitter':
+            return <FaTwitter />;
+        case 'Vimeo':
+            return <FaVimeo />;
+        case 'VK':
+            return <SiVk />;
+        case 'Yelp':
+            return <SiYelp />;
+        case 'YouTube':
+            return <FaYoutube />;
+        default:
+            return null;
+    }
+};
+
 function Cards() {
   const navigate = useNavigate();
   const [cards, setCards] = useState([])
@@ -33,6 +132,18 @@ function Cards() {
   const [error, setError] = useState(null);
   const [shareError, setShareError] = useState("");
   const [copied, setCopied] = useState(false);
+  const [printCard, setPrintCard] = useState(null);
+  const printRef = useRef();
+
+  // Always render the print area, but update its content when needed
+  const [printCardData, setPrintCardData] = useState(null);
+
+  const handlePrint = useReactToPrint({
+    content: () => printRef.current,
+    documentTitle: printCardData ? `${printCardData.firstName || 'card'}_${printCardData.lastName || ''}_onfra` : 'card_onfra',
+    removeAfterPrint: true,
+    onAfterPrint: () => setPrintCard(null),
+  });
 
   useEffect(() => {
     console.log("Cards component mounted");
@@ -42,6 +153,7 @@ function Cards() {
     } catch (err) {
       console.error("Error in useEffect:", err);
       setError(err.message);
+      toast.error(err.message);
     }
   }, []);
 
@@ -72,6 +184,7 @@ function Cards() {
     } catch (err) {
       console.error("Error in validateToken:", err);
       setError(err.message);
+      toast.error(err.message);
     }
   }
 
@@ -93,6 +206,7 @@ function Cards() {
       if (!response.ok) {
         setError(`Failed to fetch cards: ${response.status}`);
         setLoading(false);
+        toast.error('Failed to load cards. Please try again.');
         return;
       }
       const res = await response.json();
@@ -102,6 +216,7 @@ function Cards() {
     } catch (err) {
       console.error("Error in getCards:", err);
       setError(err.message);
+      toast.error(err.message);
       setLoading(false);
     }
   }
@@ -201,6 +316,23 @@ function Cards() {
     }
   }
 
+  function handleDownloadCard(card) {
+    setPrintCard(card);
+  }
+
+  // When printCard is set, update printCardData and trigger print after DOM update
+  useEffect(() => {
+    if (printCard) {
+      setPrintCardData(printCard);
+    }
+  }, [printCard]);
+
+  useEffect(() => {
+    if (printCardData) {
+      handlePrint();
+    }
+  }, [printCardData]);
+
   return (
     <div className="min-h-screen bg-gray-50 p-8 font-sans">
       <h2 className="text-3xl font-bold text-gray-800 mb-8 flex items-center gap-2">My Cards <span role='img' aria-label='card'>💳</span></h2>
@@ -221,56 +353,58 @@ function Cards() {
         </div>
       )}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 justify-items-center">
-        {!loading && cards.map((card, index) => (
-          <div key={card.id || index} className="bg-white rounded-xl shadow p-6 flex flex-col items-center justify-between border border-gray-100 w-full max-w-xs min-h-[420px] transition-shadow hover:shadow-md">
-            <Link to={`/build/${card.id}`} className="w-full flex-1 flex flex-col items-center">
-              {/* Unified Card Preview */}
-              <div
-                className="w-full flex flex-col items-center rounded-lg shadow-inner overflow-hidden relative min-h-[320px] py-4"
-                style={{ backgroundColor: card.primaryBackgroundColor?.trim() ? card.primaryBackgroundColor : '#fff' }}
-              >
-                {/* Cover Photo */}
-                {card.coverPhoto && (card.coverPhoto.includes("/images") ? (
-                  <img src={"/api" + card.coverPhoto} alt="Cover" className="w-full h-32 object-cover" />
-                ) : (
-                  <img src={card.coverPhoto} alt="Cover" className="w-full h-32 object-cover" />
-                ))}
-                {/* Logo */}
-                {card.logo && (card.logo.includes("/images") ? (
-                  <img src={"/api" + card.logo} alt="Logo" className="w-16 h-16 object-contain rounded-lg mt-[-2rem] border-4 border-white shadow-md bg-white z-10" />
-                ) : (
-                  <img src={card.logo} alt="Logo" className="w-16 h-16 object-contain rounded-lg mt-[-2rem] border-4 border-white shadow-md bg-white z-10" />
-                ))}
-                {/* Profile Photo */}
-                {(card.profilePhoto && card.profilePhoto.startsWith('/uploads/profile_photos')) ? (
-                  <img
-                    src={"/api" + card.profilePhoto}
-                    alt="Profile"
-                    className="w-20 h-20 rounded-full object-cover border-4 border-green-500 shadow-lg mt-4 bg-white z-10"
-                  />
-                ) : card.profilePhoto ? (
-                  <img
-                    src={card.profilePhoto}
-                    alt="Profile"
-                    className="w-20 h-20 rounded-full object-cover border-4 border-green-500 shadow-lg mt-4 bg-white z-10"
-                  />
-                ) : (
-                  <img
-                    src={defaultAvatar}
-                    alt="Default"
-                    className="w-20 h-20 rounded-full object-cover border-4 border-green-500 shadow-lg mt-4 bg-white z-10"
-                  />
-                )}
-                {/* Card Info */}
-                <div className="flex flex-col items-center px-4 py-3 w-full">
-                  <h3 style={{ color: card.titleColor || '#111827' }} className="text-xl font-bold mt-2 text-center truncate w-full">
-                    {card.firstName || 'First'} {card.lastName || 'Last'}
-                  </h3>
-                  <p style={{ color: card.textColor || '#374151' }} className="text-base text-center w-full truncate">{card.jobTitle || 'Job Title'}</p>
-                  <p style={{ color: card.textColor || '#6b7280' }} className="text-sm text-center w-full truncate">{card.businessName || 'Business Name'}</p>
+        {!loading && cards.map((card, index) => {
+          return (
+            <div key={card.id || index} className="bg-white rounded-xl shadow p-6 flex flex-col items-center justify-between border border-gray-100 w-full max-w-xs min-h-[420px] transition-shadow hover:shadow-md">
+              <Link to={`/build/${card.id}`} className="w-full flex-1 flex flex-col items-center">
+                {/* Unified Card Preview */}
+                <div
+                  className="w-full flex flex-col items-center rounded-lg shadow-inner overflow-hidden relative min-h-[320px] py-4"
+                  style={{ backgroundColor: card.primaryBackgroundColor?.trim() ? card.primaryBackgroundColor : '#fff' }}
+                >
+                  {/* Cover Photo */}
+                  {card.coverPhoto && (card.coverPhoto.includes("/images") ? (
+                    <img src={"/api" + card.coverPhoto} alt="Cover" className="w-full h-32 object-cover" />
+                  ) : (
+                    <img src={card.coverPhoto} alt="Cover" className="w-full h-32 object-cover" />
+                  ))}
+                  {/* Logo */}
+                  {card.logo && (card.logo.includes("/images") ? (
+                    <img src={"/api" + card.logo} alt="Logo" className="w-16 h-16 object-contain rounded-lg mt-[-2rem] border-4 border-white shadow-md bg-white z-10" />
+                  ) : (
+                    <img src={card.logo} alt="Logo" className="w-16 h-16 object-contain rounded-lg mt-[-2rem] border-4 border-white shadow-md bg-white z-10" />
+                  ))}
+                  {/* Profile Photo */}
+                  {(card.profilePhoto && card.profilePhoto.startsWith('/uploads/profile_photos')) ? (
+                    <img
+                      src={"/api" + card.profilePhoto}
+                      alt="Profile"
+                      className="w-20 h-20 rounded-full object-cover border-4 border-green-500 shadow-lg mt-4 bg-white z-10"
+                    />
+                  ) : card.profilePhoto ? (
+                    <img
+                      src={card.profilePhoto}
+                      alt="Profile"
+                      className="w-20 h-20 rounded-full object-cover border-4 border-green-500 shadow-lg mt-4 bg-white z-10"
+                    />
+                  ) : (
+                    <img
+                      src={defaultAvatar}
+                      alt="Default"
+                      className="w-20 h-20 rounded-full object-cover border-4 border-green-500 shadow-lg mt-4 bg-white z-10"
+                    />
+                  )}
+                  {/* Card Info */}
+                  <div className="flex flex-col items-center px-4 py-3 w-full">
+                    <h3 style={{ color: card.titleColor || '#111827' }} className="text-xl font-bold mt-2 text-center truncate w-full">
+                      {card.firstName || 'First'} {card.lastName || 'Last'}
+                    </h3>
+                    <p style={{ color: card.textColor || '#374151' }} className="text-base text-center w-full truncate">{card.jobTitle || 'Job Title'}</p>
+                    <p style={{ color: card.textColor || '#6b7280' }} className="text-sm text-center w-full truncate">{card.businessName || 'Business Name'}</p>
+                  </div>
                 </div>
-              </div>
-              {/* Card Actions */}
+              </Link>
+              {/* Card Actions (Share/Delete) */}
               <div className="flex justify-between items-center w-full mt-4">
                 <div>
                   <h1 className="text-lg font-semibold text-gray-800">{card.title || 'Untitled Card'}</h1>
@@ -307,9 +441,19 @@ function Cards() {
                   </button>
                 </div>
               </div>
-            </Link>
-          </div>
-        ))}
+              {/* Download Card Button on its own row, full width */}
+              <div className="w-full mt-2">
+                <button
+                  className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 rounded-md shadow transition-all text-sm tracking-wide focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:ring-opacity-50"
+                  style={{ letterSpacing: '0.05em' }}
+                  onClick={() => handleDownloadCard(card)}
+                >
+                  Download Card
+                </button>
+              </div>
+            </div>
+          )
+        })}
         {/* Create New Card grid item */}
         {!loading && (
           <div
@@ -359,6 +503,21 @@ function Cards() {
           </div>
         </div>
       )}
+      {/* Printable card for react-to-print (hidden from view, always rendered) */}
+      <div style={{ position: 'absolute', left: '-9999px', top: 0, width: '900px', background: '#fff', zIndex: -1, padding: 24 }} aria-hidden="true">
+        <div ref={printRef}>
+          {printCardData && (
+            <PDFCardSinglePage
+              formData={printCardData}
+              featuredContent={printCardData.featuredContent || []}
+              IconHandler={IconHandler}
+              generateURL={null}
+              showQr={true}
+              qrUrl={`${window.location.origin}/digital-card?user=${profile.username}&type=digital-card&org=onfra&query=${printCardData.id}`}
+            />
+          )}
+        </div>
+      </div>
     </div>
   )
 }

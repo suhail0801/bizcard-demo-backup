@@ -108,6 +108,21 @@ const User = db.define("user", {
   tableName: 'users'
 });
 
+// Tag model for global tags
+const Tag = db.define('tag', {
+  tag_id: { type: Sequelize.INTEGER, primaryKey: true, autoIncrement: true },
+  tag_name: { type: Sequelize.STRING(100), unique: true, allowNull: false },
+  usage_count: { type: Sequelize.INTEGER, defaultValue: 1 },
+  created_at: { type: Sequelize.DATE, defaultValue: Sequelize.NOW }
+}, { tableName: 'tags', timestamps: false });
+
+// Join table for card-tags many-to-many
+const CardTag = db.define('card_tag', {
+  card_id: { type: Sequelize.INTEGER, allowNull: false },
+  tag_id: { type: Sequelize.INTEGER, allowNull: false },
+}, { tableName: 'card_tags', timestamps: false });
+
+// Update SavedCard model with new fields for SEO and tags
 const SavedCard = db.define("savedCard", {
   id: {
       type: Sequelize.INTEGER,
@@ -141,6 +156,15 @@ const SavedCard = db.define("savedCard", {
   },
   email: {
       type: Sequelize.STRING,
+  },
+  // Add new fields for multiple emails/mobiles
+  emails: {
+      type: Sequelize.JSON,
+      defaultValue: [],
+  },
+  mobiles: {
+      type: Sequelize.JSON,
+      defaultValue: [],
   },
   businessName: {
       type: Sequelize.STRING,
@@ -177,8 +201,20 @@ const SavedCard = db.define("savedCard", {
   featuredContent: {
     type: Sequelize.JSON,
     defaultValue: []
-  }
+  },
+  about_yourself: { type: Sequelize.TEXT },
+  custom_url: { type: Sequelize.STRING(255), unique: true },
+  meta_keywords: { type: Sequelize.TEXT },
+  meta_title: { type: Sequelize.STRING(255) },
+  tags_json: { type: Sequelize.JSON },
+  featured_video: { type: Sequelize.STRING(255) },
+}, {
+  tableName: 'savedcards'
 });
+
+// Associations
+SavedCard.belongsToMany(Tag, { through: CardTag, foreignKey: 'card_id', otherKey: 'tag_id' });
+Tag.belongsToMany(SavedCard, { through: CardTag, foreignKey: 'tag_id', otherKey: 'card_id' });
 
 const Contact = db.define('contact', {
   id: { type: Sequelize.INTEGER, primaryKey: true, autoIncrement: true },
@@ -281,7 +317,8 @@ const registerUser =  async (req, res) => {
         titleColor: "#000000",
         primaryActions: [],
         secondaryActions: [],
-        featuredContent: []
+        featuredContent: [],
+        about_yourself: "",
       };
       if (template) {
         // Try to use template fields if available
@@ -457,116 +494,242 @@ const addUserCards = async(req,res) => {
     
 }
 
+const RESERVED_URLS = ['admin', 'login', 'logout', 'register', 'page', 'user', 'api', 'dashboard', 'settings'];
+const CUSTOM_URL_REGEX = /^[a-z0-9_-]{3,50}$/;
+const YOUTUBE_REGEX = /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.?be)\/.+/i;
+const VIMEO_REGEX = /^(https?:\/\/)?(www\.)?vimeo\.com\/.+/i;
+
 const addCard = async(req,res) => {
-  req.body.featuredContent.forEach((content, index) => {
-    if(content.type == "product") {
-      req.body.featuredContent[index].image = saveBase64Image(content.image, req.user.id, 'card_images');
+  try {
+    console.log('addCard req.body:', req.body);
+    if (!req.body.featuredContent) req.body.featuredContent = [];
+    if (!Array.isArray(req.body.featuredContent)) req.body.featuredContent = [];
+    req.body.featuredContent.forEach((content, index) => {
+      if(content.type == "product") {
+        req.body.featuredContent[index].image = saveBase64Image(content.image, req.user.id, 'card_images');
+      }
+    });
+    let {
+      featuredContent,
+      firstName,
+      lastName,
+      jobTitle,
+      mobile,
+      email,
+      emails = [],
+      mobiles = [],
+      businessName,
+      profilePhoto,
+      logo,
+      coverPhoto,
+      primaryActions,
+      secondaryActions,
+      primaryBackgroundColor,
+      secondaryBackgroundColor,
+      textColor,
+      titleColor,
+      config,
+      status,
+      title,
+      about_yourself,
+      custom_url,
+      tags = [],
+      featured_video
+    } = req.body
+    // Validate custom_url
+    if (custom_url) {
+      if (!CUSTOM_URL_REGEX.test(custom_url) || RESERVED_URLS.includes(custom_url)) {
+        return res.status(400).json({ error: 'Invalid or reserved custom URL' });
+      }
+      const existing = await SavedCard.findOne({ where: { custom_url } });
+      if (existing) {
+        return res.status(400).json({ error: 'Custom URL already taken' });
+      }
     }
-  });
-  let {
-    featuredContent,
-    firstName,
-    lastName,
-    jobTitle,
-    mobile,
-    email,
-    businessName,
-    profilePhoto,
-    logo,
-    coverPhoto,
-    primaryActions,
-    secondaryActions,
-    primaryBackgroundColor,
-    secondaryBackgroundColor,
-    textColor,
-    titleColor,
-    config,
-    status,
-    title
-  } = req.body
-  logo = saveBase64Image(logo, req.user.id, 'card_images');
-  profilePhoto = saveBase64Image(profilePhoto, req.user.id, 'profile_photos');
-  coverPhoto = saveBase64Image(coverPhoto, req.user.id, 'card_images');
-  const saveCard = await SavedCard.create({
-    userId: req.user.id,
-    featuredContent,
-    firstName,
-    lastName,
-    jobTitle,
-    mobile,
-    email,
-    businessName,
-    profilePhoto,
-    logo,
-    coverPhoto,
-    primaryActions,
-    secondaryActions,
-    primaryBackgroundColor,
-    secondaryBackgroundColor,
-    textColor,
-    titleColor,
-    config,
-    title,
-    status
-  })
-  return res.json(saveCard)
+    // Validate featured_video
+    if (featured_video && !(YOUTUBE_REGEX.test(featured_video) || VIMEO_REGEX.test(featured_video))) {
+      return res.status(400).json({ error: 'Featured video must be a YouTube or Vimeo link' });
+    }
+    // Tag logic: create or reference tags, update usage_count
+    let tagIds = [];
+    let tagNames = [];
+    if (Array.isArray(tags)) {
+      for (let tag of tags) {
+        const tagName = tag.trim().toLowerCase();
+        if (!tagName) continue;
+        let tagObj = await Tag.findOne({ where: { tag_name: tagName } });
+        if (!tagObj) {
+          tagObj = await Tag.create({ tag_name: tagName });
+        } else {
+          tagObj.usage_count += 1;
+          await tagObj.save();
+        }
+        tagIds.push(tagObj.tag_id);
+        tagNames.push(tag);
+      }
+    }
+    // Set meta_title and meta_keywords
+    const meta_title = `Onfra | ${firstName || ''} ${lastName || ''} | ${businessName || ''}`.replace(/\s+/g, ' ').trim();
+    const meta_keywords = tagNames.join(', ');
+    logo = saveBase64Image(logo, req.user.id, 'card_images');
+    profilePhoto = saveBase64Image(profilePhoto, req.user.id, 'profile_photos');
+    coverPhoto = saveBase64Image(coverPhoto, req.user.id, 'card_images');
+    // Save first value for legacy fields
+    const legacyEmail = Array.isArray(emails) && emails.length > 0 ? emails[0] : email || '';
+    const legacyMobile = Array.isArray(mobiles) && mobiles.length > 0 ? mobiles[0] : mobile || '';
+    // Create card
+    const saveCard = await SavedCard.create({
+      userId: req.user.id,
+      featuredContent,
+      firstName,
+      lastName,
+      jobTitle,
+      mobile: legacyMobile,
+      email: legacyEmail,
+      emails,
+      mobiles,
+      businessName,
+      profilePhoto,
+      logo,
+      coverPhoto,
+      primaryActions,
+      secondaryActions,
+      primaryBackgroundColor,
+      secondaryBackgroundColor,
+      textColor,
+      titleColor,
+      config,
+      title,
+      status,
+      about_yourself,
+      custom_url,
+      meta_title,
+      meta_keywords,
+      tags_json: tagNames,
+      featured_video
+    });
+    // Associate tags
+    if (tagIds.length) {
+      await saveCard.setTags(tagIds);
+    }
+    return res.json(saveCard)
+  } catch (err) {
+    console.error('Error in addCard:', err);
+    res.status(500).json({ error: 'Failed to create card', details: err.message });
+  }
 }
 
 const updateCard = async(req,res) => {
-  let {
-    featuredContent,
-    firstName,
-    lastName,
-    jobTitle,
-    mobile,
-    email,
-    businessName,
-    profilePhoto,
-    logo,
-    coverPhoto,
-    primaryActions,
-    secondaryActions,
-    primaryBackgroundColor,
-    secondaryBackgroundColor,
-    textColor,
-    titleColor,
-    status,
-    config,
-    title
-  } = req.body
-  if (Array.isArray(featuredContent)) {
-    featuredContent = featuredContent.map(item => {
-      if (item.type === 'product' && item.image) {
-        return { ...item, image: saveBase64Image(item.image, req.user.id, 'card_images') };
+  try {
+    let {
+      id,
+      featuredContent,
+      firstName,
+      lastName,
+      jobTitle,
+      mobile,
+      email,
+      emails = [],
+      mobiles = [],
+      businessName,
+      profilePhoto,
+      logo,
+      coverPhoto,
+      primaryActions,
+      secondaryActions,
+      primaryBackgroundColor,
+      secondaryBackgroundColor,
+      textColor,
+      titleColor,
+      status,
+      config,
+      title,
+      about_yourself,
+      custom_url,
+      tags = [],
+      featured_video
+    } = req.body
+    // Validate custom_url (only if changed)
+    if (custom_url) {
+      if (!CUSTOM_URL_REGEX.test(custom_url) || RESERVED_URLS.includes(custom_url)) {
+        return res.status(400).json({ error: 'Invalid or reserved custom URL' });
       }
-      return item;
-    });
+      const existing = await SavedCard.findOne({ where: { custom_url, id: { [Sequelize.Op.ne]: id } } });
+      if (existing) {
+        return res.status(400).json({ error: 'Custom URL already taken' });
+      }
+    }
+    // Validate featured_video
+    if (featured_video && !(YOUTUBE_REGEX.test(featured_video) || VIMEO_REGEX.test(featured_video))) {
+      return res.status(400).json({ error: 'Featured video must be a YouTube or Vimeo link' });
+    }
+    // Tag logic: create or reference tags, update usage_count
+    let tagIds = [];
+    let tagNames = [];
+    if (Array.isArray(tags)) {
+      for (let tag of tags) {
+        const tagName = tag.trim().toLowerCase();
+        if (!tagName) continue;
+        let tagObj = await Tag.findOne({ where: { tag_name: tagName } });
+        if (!tagObj) {
+          tagObj = await Tag.create({ tag_name: tagName });
+        } else {
+          tagObj.usage_count += 1;
+          await tagObj.save();
+        }
+        tagIds.push(tagObj.tag_id);
+        tagNames.push(tag);
+      }
+    }
+    // Set meta_title and meta_keywords
+    const meta_title = `Onfra | ${firstName || ''} ${lastName || ''} | ${businessName || ''}`.replace(/\s+/g, ' ').trim();
+    const meta_keywords = tagNames.join(', ');
+    logo = saveBase64Image(logo, req.user.id, 'card_images');
+    profilePhoto = saveBase64Image(profilePhoto, req.user.id, 'profile_photos');
+    coverPhoto = saveBase64Image(coverPhoto, req.user.id, 'card_images');
+    // Save first value for legacy fields
+    const legacyEmail = Array.isArray(emails) && emails.length > 0 ? emails[0] : email || '';
+    const legacyMobile = Array.isArray(mobiles) && mobiles.length > 0 ? mobiles[0] : mobile || '';
+    // Update card
+    const saveCard = await SavedCard.update({
+      featuredContent,
+      title,
+      firstName,
+      lastName,
+      jobTitle,
+      mobile: legacyMobile,
+      email: legacyEmail,
+      emails,
+      mobiles,
+      businessName,
+      profilePhoto,
+      logo,
+      coverPhoto,
+      primaryActions,
+      secondaryActions,
+      primaryBackgroundColor,
+      secondaryBackgroundColor,
+      textColor,
+      titleColor,
+      status,
+      config,
+      about_yourself,
+      custom_url,
+      meta_title,
+      meta_keywords,
+      tags_json: tagNames,
+      featured_video
+    }, { where: { id } });
+    // Associate tags
+    if (tagIds.length) {
+      const card = await SavedCard.findByPk(id);
+      await card.setTags(tagIds);
+    }
+    return res.json(saveCard)
+  } catch (err) {
+    console.error('Error in updateCard:', err);
+    res.status(500).json({ error: 'Failed to update card', details: err.message });
   }
-  logo = saveBase64Image(logo, req.user.id, 'card_images');
-  profilePhoto = saveBase64Image(profilePhoto, req.user.id, 'profile_photos');
-  coverPhoto = saveBase64Image(coverPhoto, req.user.id, 'card_images');
-  const saveCard = await SavedCard.update({
-    featuredContent,
-    title,
-    firstName,
-    lastName,
-    jobTitle,
-    mobile,
-    email,
-    businessName,
-    profilePhoto,
-    logo,
-    coverPhoto,
-    primaryActions,
-    secondaryActions,
-    primaryBackgroundColor,
-    secondaryBackgroundColor,
-    textColor,
-    titleColor,
-    status,
-    config
-  }, { where: { id: req.body.id } })
-  return res.json(saveCard)
 }
 
 const getCard = async(req,res) => {
@@ -588,17 +751,25 @@ const getAllCards = async(req,res) => {
 
 const getPublicCard = async(req,res) => {
   console.log(req.query, "REQUESTED OPEN CARD")  
-  const id = parseInt(req.query.id)  
-  console.log(id, "ID DECRYPTED HERE")
-  const card = await SavedCard.findOne({
-    where: {
-      id,
-      config: {
-        expose: true
-      }
-    },
-    include: [{ model: User, attributes: ['profilePhoto'] }]
-  });
+  const { id, custom_url } = req.query;
+  let card;
+  if (custom_url) {
+    card = await SavedCard.findOne({
+      where: {
+        custom_url: custom_url.toLowerCase(),
+        config: { expose: true }
+      },
+      include: [{ model: User, attributes: ['profilePhoto'] }]
+    });
+  } else if (id) {
+    card = await SavedCard.findOne({
+      where: {
+        id: parseInt(id),
+        config: { expose: true }
+      },
+      include: [{ model: User, attributes: ['profilePhoto'] }]
+    });
+  }
   if (!card) return res.status(404).json({ error: 'Card not found' });
   // Attach the latest profilePhoto from the User as ownerProfilePhoto
   const cardJson = card.toJSON();

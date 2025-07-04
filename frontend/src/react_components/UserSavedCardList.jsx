@@ -8,6 +8,7 @@ import axios from 'axios'
 import { useEffect } from 'react'
 import Navbar from './Project_Components/Navbar';
 import { Button } from '../components/button';
+import { toast } from 'react-toastify';
 
 const UserSavedCardList = () => {
 
@@ -38,6 +39,7 @@ const UserSavedCardList = () => {
                 // console.log(templateData);
             } catch (error) {
                 console.error('Error checking token validity:', error);
+                toast.error('Failed to load or delete card. Please try again.');
                 // If there is an error (e.g., token is invalid), log out the user
                 navigate('/');
             }

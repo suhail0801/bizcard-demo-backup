@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import Login from './Login';
 import Signup from './Signup';
+import { toast } from 'react-toastify';
 
 const LoginSignupModal = ({ isOpen, onClose }) => {
   const [tab, setTab] = useState('login');

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { toast } from 'react-toastify';
 
 const BizCardAuthModal = ({ isOpen, onClose, onSuccess }) => {
   const [tab, setTab] = useState('login');
@@ -48,12 +49,15 @@ const BizCardAuthModal = ({ isOpen, onClose, onSuccess }) => {
           onSuccess(data.token, profile);
         } else {
           setError('Login succeeded but failed to fetch profile.');
+          toast.error('Authentication failed. Please try again.');
         }
       } else {
         setError(data.message || 'Login failed.');
+        toast.error('Authentication failed. Please try again.');
       }
     } catch (err) {
       setError('Login failed.');
+      toast.error('Authentication failed. Please try again.');
     }
     setLoading(false);
   };
@@ -66,6 +70,7 @@ const BizCardAuthModal = ({ isOpen, onClose, onSuccess }) => {
     if (signupValues.password !== signupValues.reEnterPassword) {
       setError('Passwords do not match.');
       setLoading(false);
+      toast.error('Authentication failed. Please try again.');
       return;
     }
     try {
@@ -97,15 +102,19 @@ const BizCardAuthModal = ({ isOpen, onClose, onSuccess }) => {
             onSuccess(loginData.token, profile);
           } else {
             setError('Signup succeeded but failed to fetch profile.');
+            toast.error('Authentication failed. Please try again.');
           }
         } else {
           setError('Signup succeeded but auto-login failed.');
+          toast.error('Authentication failed. Please try again.');
         }
       } else {
         setError(data.message || 'Signup failed.');
+        toast.error('Authentication failed. Please try again.');
       }
     } catch (err) {
       setError('Signup failed.');
+      toast.error('Authentication failed. Please try again.');
     }
     setLoading(false);
   };
@@ -165,9 +174,11 @@ const BizCardAuthModal = ({ isOpen, onClose, onSuccess }) => {
         onSuccess(jwtToken, updatedProfile);
       } else {
         setError('Failed to update profile');
+        toast.error('Failed to update profile');
       }
-    } catch {
+    } catch (err) {
       setError('Error updating profile');
+      toast.error('Error updating profile');
     }
     setSaving(false);
   };

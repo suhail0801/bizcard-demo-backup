@@ -1,5 +1,6 @@
 import React from 'react'
 import { HiPlus } from "react-icons/hi";
+import { toast } from 'react-toastify';
 
 const UserInput = ({ Input, Label, Textarea, handleInput, handleUploadChange, contactFields, card, htmlData }) => {
   // const card1 = [

@@ -10,6 +10,8 @@ const Download = (rootElementId ,DownloadFileName) => {
             const pdf =new jsPDF("p","pt","a4");
             pdf.addImage(imgData,"JPEG",10,50);
             pdf.save(`${DownloadFileName}`);
+        }).catch(()=>{
+            toast.error('Download failed. Please try again.');
         })
     }
   return (

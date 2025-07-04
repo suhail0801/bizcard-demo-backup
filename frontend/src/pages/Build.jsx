@@ -11,6 +11,7 @@ import PhoneInput from 'react-phone-input-2';
 import 'react-phone-input-2/lib/style.css';
 import { parsePhoneNumberFromString, isValidPhoneNumber } from 'libphonenumber-js';
 import defaultAvatar from '../assets/default-avatar.jpg';
+import LiveCardPreview from '../components/LiveCardPreview';
 
 
 function App() {
@@ -67,8 +68,6 @@ function App() {
         firstName: 'Jhon',
         lastName: 'Doe',
         title: 'Digital Business Card',
-        mobile: '',
-        email: '',
         jobTitle: 'Designer',
         businessName: 'Onfra proptech soltuions',
         profilePhoto: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQUv4efwDYARf5XR46l60ibliIEuSnj6oRFZA&s',
@@ -80,7 +79,8 @@ function App() {
         secondaryBackgroundColor: "",
         textColor: "",
         titleColor: "",
-        expose: false
+        expose: false,
+        featured_video: '',
     });
 
     const [featuredContent, setFeaturedContent] = useState([]);
@@ -92,6 +92,50 @@ function App() {
     const [errors, setErrors] = useState({});
     const [socialLinkInput, setSocialLinkInput] = useState({ platform: '', url: '' });
     const [phoneError, setPhoneError] = useState('');
+    const [emails, setEmails] = useState(['']);
+    const [mobiles, setMobiles] = useState(['']);
+
+    // Add missing functions for mobiles
+    const handleMobileChange = (idx, value) => {
+        setMobiles(prev => prev.map((m, i) => i === idx ? value : m));
+    };
+    const addMobile = () => {
+        setMobiles(prev => [...prev, '']);
+    };
+    const removeMobile = (idx) => {
+        setMobiles(prev => prev.filter((_, i) => i !== idx));
+    };
+    // Add missing functions for emails
+    const handleEmailChange = (idx, value) => {
+        setEmails(prev => prev.map((e, i) => i === idx ? value : e));
+    };
+    const addEmail = () => {
+        setEmails(prev => [...prev, '']);
+    };
+    const removeEmail = (idx) => {
+        setEmails(prev => prev.filter((_, i) => i !== idx));
+    };
+
+    // Add state for new fields
+    const [aboutYourself, setAboutYourself] = useState('');
+    const [tags, setTags] = useState([]); // array of tag strings
+    const [tagInput, setTagInput] = useState('');
+    const [customUrl, setCustomUrl] = useState('');
+    const [customUrlError, setCustomUrlError] = useState('');
+    const [featured_video, setFeatured_video] = useState('');
+    const [aboutWordCount, setAboutWordCount] = useState(0);
+    const BASE_URL = '/page/'; // for preview, can be changed later
+    const CUSTOM_URL_REGEX = /^[a-z0-9_-]{3,50}$/;
+    const YOUTUBE_REGEX = /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.?be)\/.+/i;
+    const VIMEO_REGEX = /^(https?:\/\/)?(www\.)?vimeo\.com\/.+/i;
+    const RESERVED_URLS = ['admin', 'login', 'logout', 'register', 'page', 'user', 'api', 'dashboard', 'settings'];
+
+    // Ensure aboutWordCount is updated when aboutYourself changes (including autofill)
+    useEffect(() => {
+      const words = aboutYourself.trim().split(/\s+/).filter(Boolean);
+      setAboutWordCount(aboutYourself ? words.length : 0);
+    }, [aboutYourself]);
+
 
     function formatPhone(phone) {
         if (!phone) return '';
@@ -104,24 +148,7 @@ function App() {
 
     const handleChange = (e) => {
         const { name, value } = e.target;
-        if (name === 'mobile') {
-            let normalized = value;
-            // Only normalize if not already in '+<code> <number>' format
-            if (normalized.startsWith('+')) {
-                // If already has a space after country code, do not re-normalize
-                if (!/^\+\d{1,4} \d+/.test(normalized)) {
-                    // Remove all spaces first
-                    normalized = normalized.replace(/\s+/g, '');
-                    const match = normalized.match(/^(\+\d{1,4})(\d+)/);
-                    if (match) {
-                        normalized = match[1] + ' ' + match[2];
-                    }
-                }
-            }
-            setFormData({ ...formData, [name]: normalized });
-        } else {
-            setFormData({ ...formData, [name]: value });
-        }
+        setFormData({ ...formData, [name]: value });
     };
 
     const handleFileChange = (e) => {
@@ -135,6 +162,7 @@ function App() {
             reader.readAsDataURL(file);
         } else {
             setErrors({ ...errors, [name]: 'Please upload a valid image file.' });
+            toast.error('Please upload a valid image file.');
         }
     };
 
@@ -230,7 +258,7 @@ function App() {
             const url = URL.createObjectURL(file);
             handleFeaturedContentChange(index, 'content', url);
         } else {
-            alert('Video size exceeds the limit of 5MB');
+            toast.error('Video size exceeds the limit of 5MB');
         }
     };
     const handleProductImageChange = (e, index) => {
@@ -243,6 +271,49 @@ function App() {
             reader.readAsDataURL(file);
         }
     };
+
+    // About Me handler
+    const handleAboutChange = (e) => {
+      const value = e.target.value;
+      const words = value.trim().split(/\s+/);
+      if (words.length <= 150) {
+        setAboutYourself(value);
+        setAboutWordCount(words.length);
+      }
+    };
+    // Tags handler
+    const handleTagInputChange = (e) => {
+      setTagInput(e.target.value);
+    };
+    const handleTagInputKeyDown = (e) => {
+      if ((e.key === 'Enter' || e.key === ',') && tagInput.trim()) {
+        const newTag = tagInput.trim();
+        if (!tags.includes(newTag)) {
+          setTags([...tags, newTag]);
+        }
+        setTagInput('');
+        e.preventDefault();
+      }
+    };
+    const removeTag = (idx) => {
+      setTags(tags.filter((_, i) => i !== idx));
+    };
+    // Custom URL handler
+    const handleCustomUrlChange = (e) => {
+      const value = e.target.value.toLowerCase();
+      setCustomUrl(value);
+      if (!CUSTOM_URL_REGEX.test(value) || RESERVED_URLS.includes(value)) {
+        setCustomUrlError('Only lowercase letters, numbers, dashes, underscores (3-50 chars), not reserved words.');
+        toast.error('Only lowercase letters, numbers, dashes, underscores (3-50 chars), not reserved words.');
+      } else {
+        setCustomUrlError('');
+      }
+    };
+    // Featured Video handler
+    const handleFeaturedVideoChange = (e) => {
+      setFeatured_video(e.target.value);
+    };
+
 
     async function saveCard(formData) {
         console.log(featuredContent, "RAW DATA")
@@ -266,17 +337,20 @@ function App() {
                 mobile = matchSave[1] + ' ' + matchSave[2];
             }
         }
+        // Use first value as primary
+        const email = emails[0] || '';
         const response = await fetch(url, {
             method: formData.id ? "PUT" : "POST",
             headers: {
                 'Content-Type': 'application/json',
                 ...headers
             },
-            body: JSON.stringify({ ...formData, mobile, featuredContent }),
+            body: JSON.stringify({ ...formData, emails, mobiles, email, mobile, featuredContent, featured_video: featured_video, about_yourself: aboutYourself, tags, custom_url: customUrl, featured_video: featured_video }),
         });
 
         if (!response.ok) {
             console.log("error")
+            toast.error('Failed to save card. Please try again.');
         }
 
         const data = await response.json();
@@ -340,18 +414,25 @@ function App() {
 
         if (!response.ok) {
             console.log("error")
+            toast.error('Failed to load card. Please try again.');
         }
 
         const res = await response.json();
-        // Defensive: ensure color fields are always set for the form
+        setEmails(res.emails && res.emails.length ? res.emails : [res.email || '']);
+        setMobiles(res.mobiles && res.mobiles.length ? res.mobiles : [res.mobile || '']);
         setFormData(prev => ({
             ...prev,
             ...res,
             primaryBackgroundColor: (res.primaryBackgroundColor !== undefined && res.primaryBackgroundColor !== null && res.primaryBackgroundColor !== "") ? res.primaryBackgroundColor : "#ffffff",
             secondaryBackgroundColor: (res.secondaryBackgroundColor !== undefined && res.secondaryBackgroundColor !== null && res.secondaryBackgroundColor !== "") ? res.secondaryBackgroundColor : "#f3f4f6",
             textColor: (res.textColor !== undefined && res.textColor !== null && res.textColor !== "") ? res.textColor : "#000000",
-            titleColor: (res.titleColor !== undefined && res.titleColor !== null && res.titleColor !== "") ? res.titleColor : "#000000"
+            titleColor: (res.titleColor !== undefined && res.titleColor !== null && res.titleColor !== "") ? res.titleColor : "#000000",
+            featured_video: res.featured_video || '',
         }))
+        setAboutYourself(res.about_yourself || '');
+        setTags(res.tags_json || []);
+        setCustomUrl(res.custom_url || '');
+        setFeatured_video(res.featured_video || '');
         setConfig(res.config ? res.config : config)
         setFeaturedContent(res.featuredContent ? res.featuredContent : featuredContent)
     }
@@ -364,6 +445,7 @@ function App() {
             <ToastContainer />
             <div className="w-full lg:w-1/2 max-w-2xl mx-auto bg-white rounded-2xl shadow-xl p-6 md:p-10 border border-gray-100 flex flex-col gap-8">
                 <h2 className="text-3xl font-extrabold mb-4 text-gray-900 tracking-tight">Create Digital Card</h2>
+                <form onSubmit={handleSubmit} className="flex flex-col gap-8">
                 {/* Header Attachments */}
                 <section className="mb-4 bg-white p-6 rounded-2xl shadow border border-gray-100 flex flex-col gap-4">
                     <h2 className="text-xl font-bold mb-2 text-gray-900">Header Attachments</h2>
@@ -396,7 +478,7 @@ function App() {
                 </section>
                 {/* Personal Info */}
                 <section className="bg-white p-6 rounded-2xl shadow border border-gray-100 flex flex-col gap-4">
-                    <h2 className="text-xl font-bold mb-2 text-gray-900">Personal Information</h2>
+                        <h2 className="text-xl font-bold mb-2 text-gray-900">Card Customization</h2>
                     <div className="flex flex-col md:flex-row gap-6 items-center justify-between">
                         <div className="flex flex-col items-center gap-2 w-full md:w-1/2">
                             <input type="file" name="profilePhoto" accept="image/*" onChange={handleFileChange} className="hidden" id="profile-upload" />
@@ -433,8 +515,12 @@ function App() {
                         </div>
                     </div>
                 </section>
-                {/* Form */}
-                <form onSubmit={handleSubmit} className="flex flex-col gap-8">
+                    {/* Card Title */}
+                    <section className="bg-white p-6 rounded-2xl shadow border border-gray-100 flex flex-col gap-4">
+                        <h2 className="text-xl font-bold mb-2 text-gray-900">Card Title (for reference)</h2>
+                        <input type="text" name="title" value={formData.title} onChange={handleChange} className="w-full p-3 rounded-lg text-gray-900 bg-white border border-gray-200 focus:ring-2 focus:ring-green-200 outline-none" />
+                    </section>
+                    {/* Contact Info */}
                     <section className="bg-white p-6 rounded-2xl shadow border border-gray-100 flex flex-col gap-4">
                         <h2 className="text-xl font-bold mb-2 text-gray-900">Contact Information</h2>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -446,52 +532,88 @@ function App() {
                                 <label className="block text-gray-700 mb-1 font-medium">Last Name</label>
                                 <input type="text" name="lastName" value={formData.lastName} onChange={handleChange} className="w-full p-3 rounded-lg text-gray-900 bg-white border border-gray-200 focus:ring-2 focus:ring-green-200 outline-none" />
                             </div>
-                            <div className="md:col-span-2">
-                                <label className="block text-gray-700 mb-1 font-medium">Mobile</label>
-                                <PhoneInput
-                                    country={'in'}
-                                    value={formData.mobile}
-                                    onChange={phone => {
-                                        const value = '+' + phone;
-                                        setFormData({ ...formData, mobile: value });
-                                        if (!isValidPhoneNumber(value)) {
-                                            setPhoneError('Please enter a valid phone number.');
-                                        } else {
-                                            setPhoneError('');
-                                        }
-                                    }}
-                                    inputProps={{
-                                        name: 'mobile',
-                                        required: true,
-                                        autoFocus: false,
-                                        className: 'w-full p-3 rounded-lg bg-white text-black border border-gray-200 focus:border-green-500 focus:ring-2 focus:ring-green-200 outline-none',
-                                    }}
-                                    containerClass="w-full"
-                                    inputClass="w-full bg-white text-black p-3 rounded-lg"
-                                    buttonClass="bg-white text-black border-r border-gray-200"
-                                    dropdownStyle={{ zIndex: 1000 }}
-                                />
-                                <div className="text-xs text-gray-400 mt-1">Enter your phone number with country code.</div>
-                                {phoneError && <div className="text-xs text-red-500 mt-1">{phoneError}</div>}
-                                <div className="mt-2 text-gray-400">{formatPhone(formData.mobile)}</div>
-                            </div>
-                            <div>
-                                <label className="block text-gray-700 mb-1 font-medium">Email</label>
-                                <input type="text" name="email" value={formData.email} onChange={handleChange} className="w-full p-3 rounded-lg text-gray-900 bg-white border border-gray-200 focus:ring-2 focus:ring-green-200 outline-none" />
-                            </div>
                             <div>
                                 <label className="block text-gray-700 mb-1 font-medium">Job Title</label>
                                 <input type="text" name="jobTitle" value={formData.jobTitle} onChange={handleChange} className="w-full p-3 rounded-lg text-gray-900 bg-white border border-gray-200 focus:ring-2 focus:ring-green-200 outline-none" />
                             </div>
-                            <div className="md:col-span-2">
+                            <div>
                                 <label className="block text-gray-700 mb-1 font-medium">Business Name</label>
                                 <input type="text" name="businessName" value={formData.businessName} onChange={handleChange} className="w-full p-3 rounded-lg text-gray-900 bg-white border border-gray-200 focus:ring-2 focus:ring-green-200 outline-none" />
                             </div>
+                            <div className="md:col-span-2">
+                                <label className="block text-gray-700 mb-1 font-medium">Mobiles</label>
+                                {mobiles.map((mobile, idx) => (
+                                    <div key={idx} className="flex items-center gap-2 mb-2">
+                                        <PhoneInput
+                                            country={'in'}
+                                            value={mobile}
+                                            onChange={val => handleMobileChange(idx, '+' + val)}
+                                            inputProps={{
+                                                name: `mobile-${idx}`,
+                                                required: idx === 0,
+                                                className: 'w-full p-3 rounded-lg bg-white text-black border border-gray-200 focus:border-green-500 focus:ring-2 focus:ring-green-200 outline-none',
+                                            }}
+                                            containerClass="w-full"
+                                            inputClass="w-full bg-white text-black p-3 rounded-lg"
+                                            buttonClass="bg-white text-black border-r border-gray-200"
+                                            dropdownStyle={{ zIndex: 1000 }}
+                                        />
+                                        {mobiles.length > 1 && (
+                                            <button type="button" onClick={() => removeMobile(idx)} className="bg-red-500 text-white rounded-lg px-2 py-1 ml-2">-</button>
+                                        )}
+                                        {idx === mobiles.length - 1 && (
+                                            <button type="button" onClick={addMobile} className="bg-green-500 text-white rounded-lg px-2 py-1 ml-2">+</button>
+                                        )}
+                                    </div>
+                                ))}
+                                <div className="text-xs text-gray-400 mt-1">Enter your phone number with country code.</div>
+                            </div>
+                            <div className="md:col-span-2">
+                                <label className="block text-gray-700 mb-1 font-medium">Emails</label>
+                                {emails.map((email, idx) => (
+                                    <div key={idx} className="flex items-center gap-2 mb-2">
+                                        <input type="email" name={`email-${idx}`} value={email} onChange={e => handleEmailChange(idx, e.target.value)} className="w-full p-3 rounded-lg text-gray-900 bg-white border border-gray-200 focus:ring-2 focus:ring-green-200 outline-none" required={idx === 0} />
+                                        {emails.length > 1 && (
+                                            <button type="button" onClick={() => removeEmail(idx)} className="bg-red-500 text-white rounded-lg px-2 py-1 ml-2">-</button>
+                                        )}
+                                        {idx === emails.length - 1 && (
+                                            <button type="button" onClick={addEmail} className="bg-green-500 text-white rounded-lg px-2 py-1 ml-2">+</button>
+                                        )}
+                                    </div>
+                                ))}
+                            </div>
                         </div>
                     </section>
-                    <section className="bg-white p-6 rounded-2xl shadow border border-gray-100 flex flex-col gap-4">
-                        <h2 className="text-xl font-bold mb-2 text-gray-900">Card Title (for reference)</h2>
-                        <input type="text" name="title" value={formData.title} onChange={handleChange} className="w-full p-3 rounded-lg text-gray-900 bg-white border border-gray-200 focus:ring-2 focus:ring-green-200 outline-none" />
+                    {/* About Me */}
+                    <section className="mb-4 bg-white p-6 rounded-2xl shadow border border-gray-100 flex flex-col gap-4">
+                        <label className="font-semibold text-gray-800">About Me <span className="text-xs text-gray-400">({aboutWordCount}/150 words)</span></label>
+                        <textarea
+                            className="border rounded-lg p-2 w-full min-h-[80px]"
+                            value={aboutYourself}
+                            onChange={handleAboutChange}
+                            maxLength={1200} // ~150 words
+                            placeholder="Describe yourself (max 150 words)"
+                        />
+                    </section>
+                    {/* Tags */}
+                    <section className="mb-4 bg-white p-6 rounded-2xl shadow border border-gray-100 flex flex-col gap-4">
+                        <label className="font-semibold text-gray-800">Tags <span className="text-xs text-gray-400">(comma separated, for SEO only)</span></label>
+                        <div className="flex flex-wrap gap-2 mb-2">
+                            {tags.map((tag, idx) => (
+                                <span key={idx} className="bg-green-100 text-green-700 px-2 py-1 rounded-lg flex items-center gap-1">
+                                    {tag}
+                                    <button type="button" onClick={() => removeTag(idx)} className="ml-1 text-red-500">&times;</button>
+                                </span>
+                            ))}
+                            <input
+                                type="text"
+                                value={tagInput}
+                                onChange={handleTagInputChange}
+                                onKeyDown={handleTagInputKeyDown}
+                                className="border rounded px-2 py-1 min-w-[80px]"
+                                placeholder="Add tag"
+                            />
+                        </div>
                     </section>
                     {/* Primary Connections */}
                     <section className="p-6 bg-white rounded-2xl shadow border border-gray-100 flex flex-col gap-4">
@@ -588,6 +710,70 @@ function App() {
                             Add Featured Content
                         </button>
                     </section>
+                    {/* Featured Video */}
+                    <section className="mb-4 bg-white p-6 rounded-2xl shadow border border-gray-100 flex flex-col gap-4">
+                        <label className="font-semibold text-gray-800">Featured Video (YouTube or Vimeo link)</label>
+                        <input
+                            type="text"
+                            value={featured_video}
+                            onChange={handleFeaturedVideoChange}
+                            className="border rounded px-2 py-1"
+                            placeholder="https://youtube.com/... or https://vimeo.com/..."
+                        />
+                        {featured_video && !(YOUTUBE_REGEX.test(featured_video) || VIMEO_REGEX.test(featured_video)) && (
+                            <div className="text-xs text-red-500">Please enter a valid YouTube or Vimeo link.</div>
+                        )}
+                    </section>
+                    
+                
+                
+                    {/* Custom URL */}
+                    <section className="mb-4 bg-white p-6 rounded-2xl shadow border border-gray-100 flex flex-col gap-4">
+                        <label className="font-semibold text-gray-800">Custom URL</label>
+                        <div className="flex items-center gap-2">
+                            <span className="text-gray-500">{BASE_URL}</span>
+                            <input
+                                type="text"
+                                value={customUrl}
+                                onChange={handleCustomUrlChange}
+                                className="border rounded px-2 py-1 min-w-[120px]"
+                                placeholder="your-custom-url"
+                            />
+                        </div>
+                        {customUrl && (
+                          <div className="flex items-center gap-2 mt-1">
+                            <a
+                              href={`${window.location.origin}${BASE_URL}${customUrl}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-xs text-blue-600 underline font-mono"
+                            >
+                              {window.location.origin}{BASE_URL}{customUrl}
+                            </a>
+                            <button
+                              type="button"
+                              className="text-xs bg-gray-200 hover:bg-gray-300 rounded px-2 py-1 ml-1"
+                              onClick={async () => {
+                                const url = `${window.location.origin}${BASE_URL}${customUrl}`;
+                                if (!customUrl) {
+                                  toast.error('No custom URL to copy.');
+                                  return;
+                                }
+                                try {
+                                  await navigator.clipboard.writeText(url);
+                                  toast.success('Custom URL copied to clipboard!');
+                                } catch (err) {
+                                  toast.error('Failed to copy URL.');
+                                }
+                              }}
+                            >
+                              Copy
+                            </button>
+                          </div>
+                        )}
+                        {customUrlError && <div className="text-xs text-red-500">{customUrlError}</div>}
+                        <div className="text-xs text-gray-400 mt-1">Only the part after <span className="font-mono">{BASE_URL}</span> is editable. Once set, the custom URL cannot be changed.</div>
+                    </section>
                     <div className="flex justify-end items-center mt-4">
                         <button type="submit" className="bg-green-600 hover:bg-green-500 text-white font-bold py-3 px-8 rounded-xl shadow-lg transition-all text-lg">
                             Save Card
@@ -595,83 +781,26 @@ function App() {
                     </div>
                 </form>
             </div>
+                
             {/* Live Preview */}
             <div className="w-full lg:w-1/2 max-w-md mx-auto p-4 rounded-2xl bg-white shadow-xl border border-gray-100 flex flex-col items-center">
-                <div style={{ backgroundColor: formData.primaryBackgroundColor, top: '2rem', bottom: '2rem' }} className="p-4 rounded-2xl sticky top-8 w-full shadow-xl max-h-[80vh] overflow-y-auto">
                     <h2 className="text-lg font-bold mb-4 text-center text-gray-800">LIVE PREVIEW</h2>
-                    {formData.logo.includes("/images") ?
-                        <img src={"/api" + formData.logo} alt="Logo" className="p-4 absolute w-24 object-contain mb-4 rounded-lg" /> :
-                        <img src={formData.logo} alt="Logo" className="p-4 absolute w-24 object-contain mb-4 rounded-lg" />
-                    }
-                    {formData.profilePhoto ? (
-                        <img src={formData.profilePhoto.includes("/images") ? "/api" + formData.profilePhoto : formData.profilePhoto} alt="Profile" className="w-28 h-28 shadow-2xl mt-2 z-50 absolute right-1/2 translate-x-1/2 top-[160px] mx-auto rounded-full mb-4 object-cover border-4 border-green-200 bg-white" style={{ aspectRatio: '1/1' }} />
-                    ) : (
-                        <img src={defaultAvatar} alt="Default" className="w-28 h-28 shadow-2xl mt-2 z-50 absolute right-1/2 translate-x-1/2 top-[160px] mx-auto rounded-full mb-4 object-cover border-4 border-green-200 bg-white" style={{ aspectRatio: '1/1' }} />
-                    )}
-                    {formData.coverPhoto.includes("/images") ?
-                        <img src={"/api" + formData.coverPhoto} alt="Cover" className="w-full h-40 object-cover mb-4 rounded-lg" style={{ aspectRatio: '3/2' }} /> :
-                        <img src={formData.coverPhoto} alt="Cover" className="w-full h-40 object-cover mb-4 rounded-lg" />
-                    }
-                    <div className="text-center">
-                        <div style={{ backgroundColor: formData.secondaryBackgroundColor }} className="p-4 rounded-lg mb-4 shadow-xl">
-                            <h3 style={{ color: formData.titleColor }} className="text-2xl font-bold mt-10">{formData.firstName} {formData.lastName}</h3>
-                            <p style={{ color: formData.textColor }} className="text-lg">{formData.jobTitle}</p>
-                            <p style={{ color: formData.textColor }} className="text-gray-400">{formData.businessName}</p>
-                        </div>
-                        {formData.primaryActions.length ? (
-                            <div style={{ backgroundColor: formData.secondaryBackgroundColor }} className="rounded-lg p-4 my-4 shadow-xl">
-                                <h2 style={{ color: formData.titleColor }} className="text-lg font-bold mb-4 text-center">Primary Platforms</h2>
-                                <div className="flex justify-center">
-                                    <div className="grid grid-cols-5 gap-4">
-                                        {formData.primaryActions.map(({ platform, url, color }) => (
-                                            <a key={platform} href={url} target="_blank" rel="noopener noreferrer" className="flex justify-center items-center text-white p-4 rounded-full" style={{ background: color }}>
-                                                <IconHandler platform={platform} />
-                                            </a>
-                                        ))}
-                                    </div>
-                                </div>
-                            </div>
-                        ) : null}
-                        {formData.secondaryActions.length ? (
-                            <div style={{ backgroundColor: formData.secondaryBackgroundColor }} className="rounded-lg p-4 my-4 shadow-xl">
-                                <h2 style={{ color: formData.titleColor }} className="text-lg font-bold mb-4 text-center">Also Active in</h2>
-                                <div className="flex justify-center items-center">
-                                    <div className="grid grid-cols-5 gap-4">
-                                        {formData.secondaryActions.map(({ platform, url, color }) => (
-                                            <a key={platform} href={url} target="_blank" rel="noopener noreferrer" className="flex justify-center items-center text-white p-4 rounded-full" style={{ background: color }}>
-                                                <IconHandler platform={platform} />
-                                            </a>
-                                        ))}
-                                    </div>
-                                </div>
-                            </div>
-                        ) : null}
-                        <div className="mt-8">
-                            {featuredContent.map((item, index) => (
-                                <div key={index} className="mb-4">
-                                    {item.type === 'media' && item.content && <video src={item.content} controls autoPlay loop className="w-full p-4 rounded-lg shadow-xl" style={{ backgroundColor: formData.secondaryBackgroundColor }} />}
-                                    {item.type === 'product' && (
-                                        <div style={{ backgroundColor: formData.secondaryBackgroundColor }} className="text-center p-4 rounded-lg">
-                                            {item.image && <img src={`/api${item.image}`} alt="Product" className="w-full h-32 object-cover rounded-lg mb-2" style={{ aspectRatio: '4/3' }} />}
-                                            <h3 style={{ color: formData.titleColor }} className="text-xl font-bold">{item.title}</h3>
-                                            <p style={{ color: formData.textColor }} className="text-gray-400">{item.description}</p>
-                                            <p style={{ color: formData.textColor }} className="text-lg">{item.price}</p>
-                                            {item.buttonText && (
-                                                <button style={{ background: formData.primaryBackgroundColor }} className="p-2 rounded-lg mt-2 text-white font-semibold">
-                                                    <a href={item.link} target="__blank">{item.buttonText}</a>
-                                                </button>
-                                            )}
-                                        </div>
-                                    )}
-                                    {item.type === 'text' && <p style={{ backgroundColor: formData.secondaryBackgroundColor, color: formData.textColor }} className="text-white w-full p-4 rounded-lg shadow-xl">{item.content}</p>}
-                                    {item.type === 'embed' && item.content && (
-                                        <div className="embed-wrapper w-full bg-gray-100 rounded-lg shadow-xl" dangerouslySetInnerHTML={{ __html: item.content }} />
-                                    )}
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                </div>
+                <LiveCardPreview
+                  formData={{
+                    ...formData,
+                    mobiles: (Array.isArray(mobiles) && mobiles.length > 0)
+                      ? mobiles.map(mobile => {
+                          // Format mobile as +91 9080723329
+                          const phone = parsePhoneNumberFromString(mobile, 'IN');
+                          return phone ? phone.formatInternational() : mobile;
+                        })
+                      : [],
+                    emails,
+                    featured_video: formData.featured_video,
+                  }}
+                  featuredContent={featuredContent}
+                  IconHandler={IconHandler}
+                />
             </div>
         </div>
     );
